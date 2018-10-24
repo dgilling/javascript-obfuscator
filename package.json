@@ -34,7 +34,6 @@
     "md5": "2.2.1",
     "mkdirp": "0.5.1",
     "multimatch": "2.1.0",
-    "opencollective": "1.0.3",
     "reflect-metadata": "0.1.12",
     "source-map-support": "0.5.8",
     "string-template": "1.0.0",
@@ -103,8 +102,7 @@
     "test": "scripts/test",
     "tslint": "scripts/tslint",
     "travis": "scripts/travis",
-    "git:addFiles": "scripts/git-add-files",
-    "postinstall": "opencollective postinstall"
+    "git:addFiles": "scripts/git-add-files"
   },
   "pre-commit": [
     "build",
@@ -113,10 +111,5 @@
   "author": {
     "name": "Timofey Kachalov"
   },
-  "license": "BSD-2-Clause",
-  "collective": {
-    "type": "opencollective",
-    "url": "https://opencollective.com/javascript-obfuscator",
-    "logo": "https://opencollective.com/opencollective/logo.txt"
-  }
+  "license": "BSD-2-Clause"
 }
