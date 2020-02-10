@@ -3,12 +3,13 @@ import { ServiceIdentifiers } from '../../../container/ServiceIdentifiers';
 
 import { TCustomNodeFactory } from '../../../types/container/custom-nodes/TCustomNodeFactory';
 import { TIdentifierNamesGeneratorFactory } from '../../../types/container/generators/TIdentifierNamesGeneratorFactory';
+import { TInitialData } from '../../../types/TInitialData';
 import { TNodeWithStatements } from '../../../types/node/TNodeWithStatements';
 
 import { ICustomNode } from '../../../interfaces/custom-nodes/ICustomNode';
 import { IOptions } from '../../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../../interfaces/utils/IRandomGenerator';
-import { IStackTraceData } from '../../../interfaces/analyzers/stack-trace-analyzer/IStackTraceData';
+import { ICallsGraphData } from '../../../interfaces/analyzers/calls-graph-analyzer/ICallsGraphData';
 
 import { initializable } from '../../../decorators/Initializable';
 
@@ -16,7 +17,9 @@ import { CustomNode } from '../../../enums/custom-nodes/CustomNode';
 import { ObfuscationEvent } from '../../../enums/event-emitters/ObfuscationEvent';
 
 import { AbstractCustomNodeGroup } from '../../AbstractCustomNodeGroup';
+import { ConsoleOutputDisableExpressionNode } from '../ConsoleOutputDisableExpressionNode';
 import { NodeAppender } from '../../../node/NodeAppender';
+import { NodeCallsControllerFunctionNode } from '../../node-calls-controller-nodes/NodeCallsControllerFunctionNode';
 
 @injectable()
 export class ConsoleOutputCustomNodeGroup extends AbstractCustomNodeGroup {
@@ -42,7 +45,7 @@ export class ConsoleOutputCustomNodeGroup extends AbstractCustomNodeGroup {
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__ICustomNode) customNodeFactory: TCustomNodeFactory,
         @inject(ServiceIdentifiers.Factory__IIdentifierNamesGenerator)
             identifierNamesGeneratorFactory: TIdentifierNamesGeneratorFactory,
@@ -56,25 +59,25 @@ export class ConsoleOutputCustomNodeGroup extends AbstractCustomNodeGroup {
 
     /**
      * @param {TNodeWithStatements} nodeWithStatements
-     * @param {IStackTraceData[]} stackTraceData
+     * @param {ICallsGraphData[]} callsGraphData
      */
-    public appendCustomNodes (nodeWithStatements: TNodeWithStatements, stackTraceData: IStackTraceData[]): void {
-        const randomStackTraceIndex: number = this.getRandomStackTraceIndex(stackTraceData.length);
+    public appendCustomNodes (nodeWithStatements: TNodeWithStatements, callsGraphData: ICallsGraphData[]): void {
+        const randomCallsGraphIndex: number = this.getRandomCallsGraphIndex(callsGraphData.length);
 
         // consoleOutputDisableExpressionNode append
         this.appendCustomNodeIfExist(CustomNode.ConsoleOutputDisableExpressionNode, (customNode: ICustomNode) => {
             NodeAppender.appendToOptimalBlockScope(
-                stackTraceData,
+                callsGraphData,
                 nodeWithStatements,
                 customNode.getNode(),
-                randomStackTraceIndex
+                randomCallsGraphIndex
             );
         });
 
         // nodeCallsControllerFunctionNode append
         this.appendCustomNodeIfExist(CustomNode.NodeCallsControllerFunctionNode, (customNode: ICustomNode) => {
-            const targetNodeWithStatements: TNodeWithStatements = stackTraceData.length
-                ? NodeAppender.getOptimalBlockScope(stackTraceData, randomStackTraceIndex, 1)
+            const targetNodeWithStatements: TNodeWithStatements = callsGraphData.length
+                ? NodeAppender.getOptimalBlockScope(callsGraphData, randomCallsGraphIndex, 1)
                 : nodeWithStatements;
 
             NodeAppender.prepend(targetNodeWithStatements, customNode.getNode());
@@ -90,8 +93,10 @@ export class ConsoleOutputCustomNodeGroup extends AbstractCustomNodeGroup {
 
         const callsControllerFunctionName: string = this.identifierNamesGenerator.generate();
 
-        const consoleOutputDisableExpressionNode: ICustomNode = this.customNodeFactory(CustomNode.ConsoleOutputDisableExpressionNode);
-        const nodeCallsControllerFunctionNode: ICustomNode = this.customNodeFactory(CustomNode.NodeCallsControllerFunctionNode);
+        const consoleOutputDisableExpressionNode: ICustomNode<TInitialData<ConsoleOutputDisableExpressionNode>> =
+            this.customNodeFactory(CustomNode.ConsoleOutputDisableExpressionNode);
+        const nodeCallsControllerFunctionNode: ICustomNode<TInitialData<NodeCallsControllerFunctionNode>> =
+            this.customNodeFactory(CustomNode.NodeCallsControllerFunctionNode);
 
         consoleOutputDisableExpressionNode.initialize(callsControllerFunctionName);
         nodeCallsControllerFunctionNode.initialize(this.appendEvent, callsControllerFunctionName);

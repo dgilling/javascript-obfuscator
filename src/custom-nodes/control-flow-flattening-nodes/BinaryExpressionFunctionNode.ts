@@ -1,15 +1,14 @@
 import { inject, injectable, } from 'inversify';
 import { ServiceIdentifiers } from '../../container/ServiceIdentifiers';
 
-import { BinaryOperator } from 'estree';
+import type { BinaryOperator } from 'estree';
 
 import { TIdentifierNamesGeneratorFactory } from '../../types/container/generators/TIdentifierNamesGeneratorFactory';
 import { TStatement } from '../../types/node/TStatement';
 
 import { IOptions } from '../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../interfaces/utils/IRandomGenerator';
-
-import { initializable } from '../../decorators/Initializable';
+import { ICustomNodeFormatter } from '../../interfaces/custom-nodes/ICustomNodeFormatter';
 
 import { AbstractCustomNode } from '../AbstractCustomNode';
 import { NodeFactory } from '../../node/NodeFactory';
@@ -20,21 +19,22 @@ export class BinaryExpressionFunctionNode extends AbstractCustomNode {
     /**
      * @type {BinaryOperator}
      */
-    @initializable()
     private operator!: BinaryOperator;
 
     /**
      * @param {TIdentifierNamesGeneratorFactory} identifierNamesGeneratorFactory
+     * @param {ICustomNodeFormatter} customNodeFormatter
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__IIdentifierNamesGenerator)
             identifierNamesGeneratorFactory: TIdentifierNamesGeneratorFactory,
+        @inject(ServiceIdentifiers.ICustomNodeFormatter) customNodeFormatter: ICustomNodeFormatter,
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
         @inject(ServiceIdentifiers.IOptions) options: IOptions
     ) {
-        super(identifierNamesGeneratorFactory, randomGenerator, options);
+        super(identifierNamesGeneratorFactory, customNodeFormatter, randomGenerator, options);
     }
 
     /**
@@ -45,9 +45,10 @@ export class BinaryExpressionFunctionNode extends AbstractCustomNode {
     }
 
     /**
+     * @param {string} nodeTemplate
      * @returns {TStatement[]}
      */
-    protected getNodeStructure (): TStatement[] {
+    protected getNodeStructure (nodeTemplate: string): TStatement[] {
         const structure: TStatement = NodeFactory.expressionStatementNode(
             NodeFactory.functionExpressionNode(
                 [

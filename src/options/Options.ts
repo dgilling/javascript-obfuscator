@@ -1,7 +1,10 @@
+import { TypeFromEnum } from '@gradecam/tsenum';
+
 import { inject, injectable } from 'inversify';
 import { ServiceIdentifiers } from '../container/ServiceIdentifiers';
 
 import {
+    ArrayNotEmpty,
     ArrayUnique,
     IsArray,
     IsBoolean,
@@ -31,6 +34,7 @@ import { StringArrayEncoding } from '../enums/StringArrayEncoding';
 import { DEFAULT_PRESET } from './presets/Default';
 
 import { ValidationErrorsFormatter } from './ValidationErrorsFormatter';
+import { IsAllowedForObfuscationTargets } from './validators/IsAllowedForObfuscationTargets';
 
 @injectable()
 export class Options implements IOptions {
@@ -101,16 +105,21 @@ export class Options implements IOptions {
     @IsString({
         each: true
     })
+    @IsAllowedForObfuscationTargets([
+        ObfuscationTarget.Browser,
+        ObfuscationTarget.BrowserNoEval,
+    ])
     public readonly domainLock!: string[];
 
     /**
      * @type {IdentifierNamesGenerator}
      */
     @IsIn([
+        IdentifierNamesGenerator.DictionaryIdentifierNamesGenerator,
         IdentifierNamesGenerator.HexadecimalIdentifierNamesGenerator,
         IdentifierNamesGenerator.MangledIdentifierNamesGenerator
     ])
-    public readonly identifierNamesGenerator!: IdentifierNamesGenerator;
+    public readonly identifierNamesGenerator!: TypeFromEnum<typeof IdentifierNamesGenerator>;
 
     /**
      * @type {string}
@@ -118,11 +127,28 @@ export class Options implements IOptions {
     @IsString()
     public readonly identifiersPrefix!: string;
 
+    @IsArray()
+    @ArrayUnique()
+    @IsString({
+        each: true
+    })
+    @ValidateIf((options: IOptions) =>
+        options.identifierNamesGenerator === IdentifierNamesGenerator.DictionaryIdentifierNamesGenerator
+    )
+    @ArrayNotEmpty()
+    public readonly identifiersDictionary!: string[];
+
     /**
      * @type {string}
      */
     @IsString()
     public readonly inputFileName!: string;
+
+    /**
+     * @type {string}
+     */
+    @IsString()
+    public readonly inputFilePath!: string;
 
     /**
      * @type {boolean}
@@ -163,16 +189,21 @@ export class Options implements IOptions {
     public readonly rotateStringArray!: boolean;
 
     /**
-     * @type {number}
+     * @type {string | number}
      */
-    @IsNumber()
-    public readonly seed!: number;
+    public readonly seed!: string | number;
 
     /**
      * @type {boolean}
      */
     @IsBoolean()
     public readonly selfDefending!: boolean;
+
+    /**
+     * @type {boolean}
+     */
+    @IsBoolean()
+    public readonly shuffleStringArray!: boolean;
 
     /**
      * @type {boolean}
@@ -202,7 +233,21 @@ export class Options implements IOptions {
      * @type {SourceMapMode}
      */
     @IsIn([SourceMapMode.Inline, SourceMapMode.Separate])
-    public readonly sourceMapMode!: SourceMapMode;
+    public readonly sourceMapMode!: TypeFromEnum<typeof SourceMapMode>;
+
+    /**
+     * @type {boolean}
+     */
+    @IsBoolean()
+    public readonly splitStrings!: boolean;
+
+    /**
+     * @type {number}
+     */
+    @IsNumber()
+    @ValidateIf((options: IOptions) => Boolean(options.splitStrings))
+    @Min(1)
+    public readonly splitStringsChunkLength!: number;
 
     /**
      * @type {boolean}
@@ -228,7 +273,7 @@ export class Options implements IOptions {
      * @type {ObfuscationTarget}
      */
     @IsIn([ObfuscationTarget.Browser, ObfuscationTarget.BrowserNoEval, ObfuscationTarget.Node])
-    public readonly target!: ObfuscationTarget;
+    public readonly target!: TypeFromEnum<typeof ObfuscationTarget>;
 
     /**
      * @type {boolean}
@@ -246,7 +291,7 @@ export class Options implements IOptions {
      * @param {TInputOptions} inputOptions
      * @param {IOptionsNormalizer} optionsNormalizer
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.TInputOptions) inputOptions: TInputOptions,
         @inject(ServiceIdentifiers.IOptionsNormalizer) optionsNormalizer: IOptionsNormalizer
     ) {

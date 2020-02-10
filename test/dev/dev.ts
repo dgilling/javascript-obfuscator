@@ -1,4 +1,5 @@
 'use strict';
+
 import { NO_ADDITIONAL_NODES_PRESET } from '../../src/options/presets/NoCustomNodes';
 
 (function () {
@@ -6,14 +7,15 @@ import { NO_ADDITIONAL_NODES_PRESET } from '../../src/options/presets/NoCustomNo
 
     let obfuscatedCode: string = JavaScriptObfuscator.obfuscate(
         `
-        var n;
-        (n = {foo: 'bar'}).baz = n.foo;
+            function foo({bar = ''}) {
+                return bar;
+            }
+            
+            console.log(foo({bar: 1}));
         `,
         {
             ...NO_ADDITIONAL_NODES_PRESET,
-            compact: false,
-            transformObjectKeys: true,
-            seed: 1
+            compact: false
         }
     ).getObfuscatedCode();
 

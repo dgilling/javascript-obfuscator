@@ -18,15 +18,15 @@ export abstract class AbstractIdentifierNamesGenerator implements IIdentifierNam
     protected readonly randomGenerator: IRandomGenerator;
 
     /**
-     * @type {Array}
+     * @type {Set<string>}
      */
-    protected readonly preservedNames: string[] = [];
+    protected readonly preservedNamesSet: Set<string> = new Set();
 
     /**
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
         @inject(ServiceIdentifiers.IOptions) options: IOptions
     ) {
@@ -35,23 +35,11 @@ export abstract class AbstractIdentifierNamesGenerator implements IIdentifierNam
     }
 
     /**
-     * @param {number} nameLength
-     * @returns {string}
-     */
-    public abstract generate (nameLength?: number): string;
-
-    /**
-     * @param {number} nameLength
-     * @returns {string}
-     */
-    public abstract generateWithPrefix (nameLength?: number): string;
-
-    /**
      * @param {string} name
      * @returns {void}
      */
     public preserveName (name: string): void {
-        this.preservedNames.push(name);
+        this.preservedNamesSet.add(name);
     }
 
     /**
@@ -59,7 +47,7 @@ export abstract class AbstractIdentifierNamesGenerator implements IIdentifierNam
      * @returns {boolean}
      */
     public isValidIdentifierName (name: string): boolean {
-        return this.notReservedName(name) && !this.preservedNames.includes(name);
+        return this.notReservedName(name) && !this.preservedNamesSet.has(name);
     }
 
     /**
@@ -74,4 +62,16 @@ export abstract class AbstractIdentifierNamesGenerator implements IIdentifierNam
             : true;
 
     }
+
+    /**
+     * @param {number} nameLength
+     * @returns {string}
+     */
+    public abstract generate (nameLength?: number): string;
+
+    /**
+     * @param {number} nameLength
+     * @returns {string}
+     */
+    public abstract generateWithPrefix (nameLength?: number): string;
 }

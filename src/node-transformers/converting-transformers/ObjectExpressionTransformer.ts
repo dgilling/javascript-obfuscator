@@ -12,7 +12,6 @@ import { TransformationStage } from '../../enums/node-transformers/Transformatio
 import { AbstractNodeTransformer } from '../AbstractNodeTransformer';
 import { NodeFactory } from '../../node/NodeFactory';
 import { NodeGuards } from '../../node/NodeGuards';
-import { IEscapeSequenceEncoder } from '../../interfaces/utils/IEscapeSequenceEncoder';
 
 /**
  * replaces:
@@ -24,23 +23,14 @@ import { IEscapeSequenceEncoder } from '../../interfaces/utils/IEscapeSequenceEn
 @injectable()
 export class ObjectExpressionTransformer extends AbstractNodeTransformer {
     /**
-     * @type {IEscapeSequenceEncoder}
-     */
-    private readonly escapeSequenceEncoder: IEscapeSequenceEncoder;
-
-    /**
-     * @param {IEscapeSequenceEncoder} escapeSequenceEncoder
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
-        @inject(ServiceIdentifiers.IEscapeSequenceEncoder) escapeSequenceEncoder: IEscapeSequenceEncoder,
+    public constructor (
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
         @inject(ServiceIdentifiers.IOptions) options: IOptions
     ) {
         super(randomGenerator, options);
-
-        this.escapeSequenceEncoder = escapeSequenceEncoder;
     }
 
     /**
@@ -51,7 +41,7 @@ export class ObjectExpressionTransformer extends AbstractNodeTransformer {
         switch (transformationStage) {
             case TransformationStage.Converting:
                 return {
-                    enter: (node: ESTree.Node, parentNode: ESTree.Node | null) => {
+                    enter: (node: ESTree.Node, parentNode: ESTree.Node | null): ESTree.Node | undefined => {
                         if (parentNode && NodeGuards.isObjectExpressionNode(node)) {
                             return this.transformNode(node, parentNode);
                         }
@@ -93,7 +83,7 @@ export class ObjectExpressionTransformer extends AbstractNodeTransformer {
             return;
         }
 
-        property.key = NodeFactory.literalNode(this.getPropertyKeyValue(property.key.value));
+        property.key = NodeFactory.literalNode(property.key.value);
     }
 
     /**
@@ -108,16 +98,6 @@ export class ObjectExpressionTransformer extends AbstractNodeTransformer {
             return;
         }
 
-        property.key = NodeFactory.literalNode(this.getPropertyKeyValue(property.key.name));
-    }
-
-    /**
-     * @param {string} inputValue
-     * @returns {string}
-     */
-    private getPropertyKeyValue (inputValue: string): string {
-        return this.options.unicodeEscapeSequence
-            ? this.escapeSequenceEncoder.encode(inputValue, true)
-            : inputValue;
+        property.key = NodeFactory.literalNode(property.key.name);
     }
 }

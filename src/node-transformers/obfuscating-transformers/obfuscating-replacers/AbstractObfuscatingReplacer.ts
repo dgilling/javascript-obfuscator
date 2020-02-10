@@ -18,16 +18,16 @@ export abstract class AbstractObfuscatingReplacer implements IObfuscatingReplace
     /**
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.IOptions) options: IOptions
     ) {
         this.options = options;
     }
 
     /**
-     * @param {SimpleLiteral["value"]} nodeValue
+     * @param {Node} node
      * @param {TNodeWithLexicalScope} lexicalScopeNode
      * @returns {Node}
      */
-    public abstract replace (nodeValue: ESTree.SimpleLiteral['value'], lexicalScopeNode?: TNodeWithLexicalScope): ESTree.Node;
+    public abstract replace (node: ESTree.Node, lexicalScopeNode?: TNodeWithLexicalScope): ESTree.Node;
 }

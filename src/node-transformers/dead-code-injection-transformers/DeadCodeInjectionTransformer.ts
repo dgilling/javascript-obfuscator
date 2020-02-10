@@ -5,6 +5,7 @@ import * as estraverse from 'estraverse';
 import * as ESTree from 'estree';
 
 import { TDeadNodeInjectionCustomNodeFactory } from '../../types/container/custom-nodes/TDeadNodeInjectionCustomNodeFactory';
+import { TInitialData } from '../../types/TInitialData';
 import { TNodeWithStatements } from '../../types/node/TNodeWithStatements';
 
 import { ICustomNode } from '../../interfaces/custom-nodes/ICustomNode';
@@ -19,6 +20,7 @@ import { NodeType } from '../../enums/node/NodeType';
 import { TransformationStage } from '../../enums/node-transformers/TransformationStage';
 
 import { AbstractNodeTransformer } from '../AbstractNodeTransformer';
+import { BlockStatementDeadCodeInjectionNode } from '../../custom-nodes/dead-code-injection-nodes/BlockStatementDeadCodeInjectionNode';
 import { NodeFactory } from '../../node/NodeFactory';
 import { NodeGuards } from '../../node/NodeGuards';
 import { NodeStatementUtils } from '../../node/NodeStatementUtils';
@@ -45,12 +47,8 @@ export class DeadCodeInjectionTransformer extends AbstractNodeTransformer {
      * @type {NodeTransformer[]}
      */
     private static readonly transformersToRenameBlockScopeIdentifiers: NodeTransformer[] = [
-        NodeTransformer.CatchClauseTransformer,
-        NodeTransformer.ClassDeclarationTransformer,
-        NodeTransformer.FunctionDeclarationTransformer,
-        NodeTransformer.FunctionTransformer,
         NodeTransformer.LabeledStatementTransformer,
-        NodeTransformer.VariableDeclarationTransformer
+        NodeTransformer.ScopeIdentifiersTransformer
     ];
 
     /**
@@ -84,7 +82,7 @@ export class DeadCodeInjectionTransformer extends AbstractNodeTransformer {
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__IDeadCodeInjectionCustomNode)
             deadCodeInjectionCustomNodeFactory: TDeadNodeInjectionCustomNodeFactory,
         @inject(ServiceIdentifiers.ITransformersRunner) transformersRunner: ITransformersRunner,
@@ -218,14 +216,17 @@ export class DeadCodeInjectionTransformer extends AbstractNodeTransformer {
         switch (transformationStage) {
             case TransformationStage.DeadCodeInjection:
                 return {
-                    enter: (node: ESTree.Node, parentNode: ESTree.Node | null) => {
+                    enter: (node: ESTree.Node, parentNode: ESTree.Node | null): ESTree.Node | undefined => {
                         if (parentNode && NodeGuards.isProgramNode(node)) {
                             this.analyzeNode(node, parentNode);
 
                             return node;
                         }
                     },
-                    leave: (node: ESTree.Node, parentNode: ESTree.Node | null) => {
+                    leave: (
+                        node: ESTree.Node,
+                        parentNode: ESTree.Node | null
+                    ): ESTree.Node | estraverse.VisitorOption | undefined => {
                         if (parentNode && NodeGuards.isBlockStatementNode(node)) {
                             return this.transformNode(node, parentNode);
                         }
@@ -238,7 +239,10 @@ export class DeadCodeInjectionTransformer extends AbstractNodeTransformer {
                 }
 
                 return {
-                    enter: (node: ESTree.Node, parentNode: ESTree.Node | null) => {
+                    enter: (
+                        node: ESTree.Node,
+                        parentNode: ESTree.Node | null
+                    ): ESTree.Node | estraverse.VisitorOption |undefined => {
                         if (parentNode && this.isDeadCodeInjectionRootAstHostNode(node)) {
                             return this.restoreNode(node, parentNode);
                         }
@@ -389,9 +393,8 @@ export class DeadCodeInjectionTransformer extends AbstractNodeTransformer {
          */
         this.deadCodeInjectionRootAstHostNodeSet.add(deadCodeInjectionRootAstHostNode);
 
-        const blockStatementDeadCodeInjectionCustomNode: ICustomNode = this.deadCodeInjectionCustomNodeFactory(
-            DeadCodeInjectionCustomNode.BlockStatementDeadCodeInjectionNode
-        );
+        const blockStatementDeadCodeInjectionCustomNode: ICustomNode<TInitialData<BlockStatementDeadCodeInjectionNode>> =
+            this.deadCodeInjectionCustomNodeFactory(DeadCodeInjectionCustomNode.BlockStatementDeadCodeInjectionNode);
 
         blockStatementDeadCodeInjectionCustomNode.initialize(blockStatementNode, deadCodeInjectionRootAstHostNode);
 

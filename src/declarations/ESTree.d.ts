@@ -1,14 +1,18 @@
-/* tslint:disable:interface-name */
+/* eslint-disable */
 
-import * as escodegen from 'escodegen-wallaby';
+import * as acorn from 'acorn';
+import * as escodegen from 'escodegen';
+import * as eslintScope from 'eslint-scope';
 
 declare module 'estree' {
     export interface BaseNodeMetadata {
         ignoredNode?: boolean;
     }
 
-    export interface IdentifierNodeMetadata extends BaseNodeMetadata {
-        renamedIdentifier?: boolean;
+    export interface Comment {
+        start: number;
+        end: number;
+        loc?: acorn.SourceLocation;
     }
 
     export interface LiteralNodeMetadata extends BaseNodeMetadata {
@@ -20,8 +24,8 @@ declare module 'estree' {
         parentNode?: Node;
     }
 
-    interface Identifier extends BaseNode {
-        metadata?: IdentifierNodeMetadata;
+    interface Program extends BaseNode {
+        scope?: eslintScope.Scope | null;
     }
 
     interface SimpleLiteral extends BaseNode {
@@ -30,10 +34,6 @@ declare module 'estree' {
 
     interface RegExpLiteral extends BaseNode {
         metadata?: LiteralNodeMetadata;
-    }
-
-    interface ExpressionStatement extends BaseNode {
-        directive?: 'use strict';
     }
 
     interface SimpleLiteral extends BaseNode {

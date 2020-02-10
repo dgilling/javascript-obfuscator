@@ -6,7 +6,7 @@ export class NodeMetadata {
      * @param {Partial<T["metadata"]>} metadata
      */
     public static set <T extends ESTree.Node = ESTree.Node> (node: T, metadata: Partial<T['metadata']>): void {
-        node.metadata = Object.assign(node.metadata || {}, metadata);
+        node.metadata = Object.assign(node.metadata ?? {}, metadata);
     }
 
     /**
@@ -26,14 +26,6 @@ export class NodeMetadata {
      */
     public static isIgnoredNode (node: ESTree.Node): boolean {
         return NodeMetadata.get(node, 'ignoredNode') === true;
-    }
-
-    /**
-     * @param {Node} identifierNode
-     * @returns {boolean}
-     */
-    public static isRenamedIdentifier (identifierNode: ESTree.Identifier): boolean {
-        return NodeMetadata.get<ESTree.IdentifierNodeMetadata>(identifierNode, 'renamedIdentifier') === true;
     }
 
     /**

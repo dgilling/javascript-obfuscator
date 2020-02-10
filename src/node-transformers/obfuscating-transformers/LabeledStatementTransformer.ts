@@ -47,7 +47,7 @@ export class LabeledStatementTransformer extends AbstractNodeTransformer {
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__IIdentifierObfuscatingReplacer)
             identifierObfuscatingReplacerFactory: TIdentifierObfuscatingReplacerFactory,
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
@@ -68,7 +68,7 @@ export class LabeledStatementTransformer extends AbstractNodeTransformer {
         switch (transformationStage) {
             case TransformationStage.Obfuscating:
                 return {
-                    enter: (node: ESTree.Node, parentNode: ESTree.Node | null) => {
+                    enter: (node: ESTree.Node, parentNode: ESTree.Node | null): ESTree.Node | undefined => {
                         if (parentNode && NodeGuards.isLabeledStatementNode(node)) {
                             return this.transformNode(node, parentNode);
                         }
@@ -106,7 +106,7 @@ export class LabeledStatementTransformer extends AbstractNodeTransformer {
         labeledStatementNode: ESTree.LabeledStatement,
         lexicalScopeNode: TNodeWithLexicalScope
     ): void {
-        this.identifierObfuscatingReplacer.storeLocalName(labeledStatementNode.label.name, lexicalScopeNode);
+        this.identifierObfuscatingReplacer.storeLocalName(labeledStatementNode.label, lexicalScopeNode);
     }
 
     /**
@@ -121,7 +121,7 @@ export class LabeledStatementTransformer extends AbstractNodeTransformer {
             enter: (node: ESTree.Node, parentNode: ESTree.Node | null): void => {
                 if (parentNode && NodeGuards.isLabelIdentifierNode(node, parentNode)) {
                     const newIdentifier: ESTree.Identifier = this.identifierObfuscatingReplacer
-                        .replace(node.name, lexicalScopeNode);
+                        .replace(node, lexicalScopeNode);
 
                     node.name = newIdentifier.name;
                 }

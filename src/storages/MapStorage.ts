@@ -35,7 +35,7 @@ export abstract class MapStorage <K, V> implements IMapStorage <K, V> {
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
         @inject(ServiceIdentifiers.IOptions) options: IOptions
     ) {
@@ -51,10 +51,18 @@ export abstract class MapStorage <K, V> implements IMapStorage <K, V> {
 
     /**
      * @param {K} key
+     * @returns {V | undefined}
+     */
+    public get (key: K): V | undefined {
+        return this.storage.get(key);
+    }
+
+    /**
+     * @param {K} key
      * @returns {V}
      */
-    public get (key: K): V {
-        const value: V | undefined = this.storage.get(key);
+    public getOrThrow (key: K): V {
+        const value: V | undefined = this.get(key);
 
         if (!value) {
             throw new Error(`No value found in map storage with key \`${key}\``);

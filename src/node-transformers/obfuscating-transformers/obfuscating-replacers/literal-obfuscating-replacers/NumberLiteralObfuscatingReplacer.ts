@@ -20,31 +20,37 @@ export class NumberLiteralObfuscatingReplacer extends AbstractObfuscatingReplace
     /**
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.IOptions) options: IOptions
     ) {
         super(options);
     }
 
     /**
-     * @param {number} nodeValue
+     * @param {SimpleLiteral} literalNode
      * @returns {Node}
      */
-    public replace (nodeValue: number): ESTree.Node {
-        let rawValue: string;
+    public replace (literalNode: ESTree.SimpleLiteral): ESTree.Node {
+        const literalValue: ESTree.SimpleLiteral['value'] = literalNode.value;
 
-        if (this.numberLiteralCache.has(nodeValue)) {
-            rawValue = <string>this.numberLiteralCache.get(nodeValue);
-        } else {
-            if (!NumberUtils.isCeil(nodeValue)) {
-                rawValue = String(nodeValue);
-            } else {
-                rawValue = `${Utils.hexadecimalPrefix}${NumberUtils.toHex(nodeValue)}`;
-            }
-
-            this.numberLiteralCache.set(nodeValue, rawValue);
+        if (typeof literalValue !== 'number') {
+            throw new Error('`NumberLiteralObfuscatingReplacer` should accept only literals with `number` value');
         }
 
-        return NodeFactory.literalNode(nodeValue, rawValue);
+        let rawValue: string;
+
+        if (this.numberLiteralCache.has(literalValue)) {
+            rawValue = <string>this.numberLiteralCache.get(literalValue);
+        } else {
+            if (!NumberUtils.isCeil(literalValue)) {
+                rawValue = String(literalValue);
+            } else {
+                rawValue = `${Utils.hexadecimalPrefix}${NumberUtils.toHex(literalValue)}`;
+            }
+
+            this.numberLiteralCache.set(literalValue, rawValue);
+        }
+
+        return NodeFactory.literalNode(literalValue, rawValue);
     }
 }

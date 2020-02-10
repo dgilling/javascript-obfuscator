@@ -9,10 +9,16 @@ import { IOptions } from '../interfaces/options/IOptions';
 import { IRandomGenerator } from '../interfaces/utils/IRandomGenerator';
 import { IVisitor } from '../interfaces/node-transformers/IVisitor';
 
+import { NodeTransformer } from '../enums/node-transformers/NodeTransformer';
 import { TransformationStage } from '../enums/node-transformers/TransformationStage';
 
 @injectable()
 export abstract class AbstractNodeTransformer implements INodeTransformer {
+    /**
+     * @type {NodeTransformer[] | undefined}
+     */
+    public readonly runAfter: NodeTransformer[] | undefined;
+
     /**
      * @type {IOptions}
      */
@@ -27,7 +33,7 @@ export abstract class AbstractNodeTransformer implements INodeTransformer {
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
         @inject(ServiceIdentifiers.IOptions) options: IOptions
     ) {

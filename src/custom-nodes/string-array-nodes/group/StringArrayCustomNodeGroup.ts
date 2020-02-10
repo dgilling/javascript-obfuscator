@@ -3,13 +3,14 @@ import { ServiceIdentifiers } from '../../../container/ServiceIdentifiers';
 
 import { TCustomNodeFactory } from '../../../types/container/custom-nodes/TCustomNodeFactory';
 import { TIdentifierNamesGeneratorFactory } from '../../../types/container/generators/TIdentifierNamesGeneratorFactory';
+import { TInitialData } from '../../../types/TInitialData';
 import { TNodeWithStatements } from '../../../types/node/TNodeWithStatements';
-import { TStringArrayStorage } from '../../../types/storages/TStringArrayStorage';
 
+import { ICallsGraphData } from '../../../interfaces/analyzers/calls-graph-analyzer/ICallsGraphData';
 import { ICustomNode } from '../../../interfaces/custom-nodes/ICustomNode';
 import { IOptions } from '../../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../../interfaces/utils/IRandomGenerator';
-import { IStackTraceData } from '../../../interfaces/analyzers/stack-trace-analyzer/IStackTraceData';
+import { IStringArrayStorage } from '../../../interfaces/storages/string-array-storage/IStringArrayStorage';
 
 import { initializable } from '../../../decorators/Initializable';
 
@@ -18,6 +19,9 @@ import { ObfuscationEvent } from '../../../enums/event-emitters/ObfuscationEvent
 
 import { AbstractCustomNodeGroup } from '../../AbstractCustomNodeGroup';
 import { NodeAppender } from '../../../node/NodeAppender';
+import { StringArrayNode } from '../StringArrayNode';
+import { StringArrayCallsWrapper } from '../StringArrayCallsWrapper';
+import { StringArrayRotateFunctionNode } from '../StringArrayRotateFunctionNode';
 
 @injectable()
 export class StringArrayCustomNodeGroup extends AbstractCustomNodeGroup {
@@ -38,20 +42,20 @@ export class StringArrayCustomNodeGroup extends AbstractCustomNodeGroup {
     private readonly customNodeFactory: TCustomNodeFactory;
 
     /**
-     * @type {TStringArrayStorage}
+     * @type {IStringArrayStorage}
      */
-    private readonly stringArrayStorage: TStringArrayStorage;
+    private readonly stringArrayStorage: IStringArrayStorage;
 
     /**
      * @param {TCustomNodeFactory} customNodeFactory
-     * @param {TStringArrayStorage} stringArrayStorage
+     * @param {IStringArrayStorage} stringArrayStorage
      * @param {TIdentifierNamesGeneratorFactory} identifierNamesGeneratorFactory
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__ICustomNode) customNodeFactory: TCustomNodeFactory,
-        @inject(ServiceIdentifiers.TStringArrayStorage) stringArrayStorage: TStringArrayStorage,
+        @inject(ServiceIdentifiers.IStringArrayStorage) stringArrayStorage: IStringArrayStorage,
         @inject(ServiceIdentifiers.Factory__IIdentifierNamesGenerator)
             identifierNamesGeneratorFactory: TIdentifierNamesGeneratorFactory,
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
@@ -65,9 +69,9 @@ export class StringArrayCustomNodeGroup extends AbstractCustomNodeGroup {
 
     /**
      * @param {TNodeWithStatements} nodeWithStatements
-     * @param {IStackTraceData[]} stackTraceData
+     * @param {ICallsGraphData[]} callsGraphData
      */
-    public appendCustomNodes (nodeWithStatements: TNodeWithStatements, stackTraceData: IStackTraceData[]): void {
+    public appendCustomNodes (nodeWithStatements: TNodeWithStatements, callsGraphData: ICallsGraphData[]): void {
         if (!this.stringArrayStorage.getLength()) {
             return;
         }
@@ -95,25 +99,20 @@ export class StringArrayCustomNodeGroup extends AbstractCustomNodeGroup {
             return;
         }
 
-        const stringArrayNode: ICustomNode = this.customNodeFactory(CustomNode.StringArrayNode);
-        const stringArrayCallsWrapper: ICustomNode = this.customNodeFactory(CustomNode.StringArrayCallsWrapper);
-        const stringArrayRotateFunctionNode: ICustomNode = this.customNodeFactory(CustomNode.StringArrayRotateFunctionNode);
+        const stringArrayNode: ICustomNode<TInitialData<StringArrayNode>> =
+            this.customNodeFactory(CustomNode.StringArrayNode);
+        const stringArrayCallsWrapper: ICustomNode<TInitialData<StringArrayCallsWrapper>> =
+            this.customNodeFactory(CustomNode.StringArrayCallsWrapper);
+        const stringArrayRotateFunctionNode: ICustomNode<TInitialData<StringArrayRotateFunctionNode>> =
+            this.customNodeFactory(CustomNode.StringArrayRotateFunctionNode);
 
-        const stringArrayStorageId: string = this.stringArrayStorage.getStorageId();
+        const stringArrayName: string = this.stringArrayStorage.getStorageName();
+        const stringArrayCallsWrapperName: string = this.stringArrayStorage.getStorageCallsWrapperName();
+        const stringArrayRotationAmount: number = this.stringArrayStorage.getRotationAmount();
 
-        const [stringArrayName, stringArrayCallsWrapperName]: string[] = stringArrayStorageId.split('|');
-
-        let stringArrayRotateValue: number;
-
-        if (this.options.rotateStringArray) {
-            stringArrayRotateValue = this.randomGenerator.getRandomInteger(100, 500);
-        } else {
-            stringArrayRotateValue = 0;
-        }
-
-        stringArrayNode.initialize(this.stringArrayStorage, stringArrayName, stringArrayRotateValue);
+        stringArrayNode.initialize(this.stringArrayStorage, stringArrayName);
         stringArrayCallsWrapper.initialize(stringArrayName, stringArrayCallsWrapperName);
-        stringArrayRotateFunctionNode.initialize(stringArrayName, stringArrayRotateValue);
+        stringArrayRotateFunctionNode.initialize(stringArrayName, stringArrayRotationAmount);
 
         this.customNodes.set(CustomNode.StringArrayNode, stringArrayNode);
         this.customNodes.set(CustomNode.StringArrayCallsWrapper, stringArrayCallsWrapper);

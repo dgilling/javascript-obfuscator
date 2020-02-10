@@ -13,7 +13,7 @@ export class BooleanLiteralObfuscatingReplacer extends AbstractObfuscatingReplac
     /**
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.IOptions) options: IOptions
     ) {
         super(options);
@@ -40,11 +40,17 @@ export class BooleanLiteralObfuscatingReplacer extends AbstractObfuscatingReplac
     }
 
     /**
-     * @param {boolean} nodeValue
+     * @param {SimpleLiteral} literalNode
      * @returns {Node}
      */
-    public replace (nodeValue: boolean): ESTree.Node {
-        return nodeValue
+    public replace (literalNode: ESTree.SimpleLiteral): ESTree.Node {
+        const literalValue: ESTree.SimpleLiteral['value'] = literalNode.value;
+
+        if (typeof literalValue !== 'boolean') {
+            throw new Error('`BooleanLiteralObfuscatingReplacer` should accept only literals with `boolean` value');
+        }
+
+        return literalValue
             ? BooleanLiteralObfuscatingReplacer.getTrueUnaryExpressionNode()
             : BooleanLiteralObfuscatingReplacer.getFalseUnaryExpressionNode();
     }

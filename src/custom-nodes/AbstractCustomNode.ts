@@ -8,12 +8,15 @@ import { ICustomNode } from '../interfaces/custom-nodes/ICustomNode';
 import { IIdentifierNamesGenerator } from '../interfaces/generators/identifier-names-generators/IIdentifierNamesGenerator';
 import { IOptions } from '../interfaces/options/IOptions';
 import { IRandomGenerator } from '../interfaces/utils/IRandomGenerator';
+import { ICustomNodeFormatter } from '../interfaces/custom-nodes/ICustomNodeFormatter';
 
 import { GlobalVariableTemplate1 } from '../templates/GlobalVariableTemplate1';
 import { GlobalVariableTemplate2 } from '../templates/GlobalVariableTemplate2';
 
 @injectable()
-export abstract class AbstractCustomNode implements ICustomNode {
+export abstract class AbstractCustomNode <
+    TInitialData extends any[] = any[]
+> implements ICustomNode <TInitialData> {
     /**
      * @type {string[]}
      */
@@ -43,32 +46,39 @@ export abstract class AbstractCustomNode implements ICustomNode {
     protected readonly randomGenerator: IRandomGenerator;
 
     /**
+     * @type {ICustomNodeFormatter}
+     */
+    protected readonly customNodeFormatter: ICustomNodeFormatter;
+
+    /**
      * @param {TIdentifierNamesGeneratorFactory} identifierNamesGeneratorFactory
+     * @param {ICustomNodeFormatter} customNodeFormatter
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    protected constructor (
         @inject(ServiceIdentifiers.Factory__IIdentifierNamesGenerator)
             identifierNamesGeneratorFactory: TIdentifierNamesGeneratorFactory,
+        @inject(ServiceIdentifiers.ICustomNodeFormatter) customNodeFormatter: ICustomNodeFormatter,
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
         @inject(ServiceIdentifiers.IOptions) options: IOptions
     ) {
         this.identifierNamesGenerator = identifierNamesGeneratorFactory(options);
+        this.customNodeFormatter = customNodeFormatter;
         this.randomGenerator = randomGenerator;
         this.options = options;
     }
-
-    /**
-     * @param {unknown[]} args
-     */
-    public abstract initialize (...args: unknown[]): void;
 
     /**
      * @returns {TStatement[]}
      */
     public getNode (): TStatement[] {
         if (!this.cachedNode) {
-            this.cachedNode = this.getNodeStructure();
+            const nodeTemplate: string = this.getNodeTemplate();
+
+            this.cachedNode = this.customNodeFormatter.formatStructure(
+                this.getNodeStructure(nodeTemplate)
+            );
         }
 
         return this.cachedNode;
@@ -84,7 +94,19 @@ export abstract class AbstractCustomNode implements ICustomNode {
     }
 
     /**
+     * @returns {string}
+     */
+    protected getNodeTemplate (): string {
+        return '';
+    }
+
+    /**
+     * @param {TInitialData} args
+     */
+    public abstract initialize (...args: TInitialData): void;
+
+    /**
      * @returns {TStatement[]}
      */
-    protected abstract getNodeStructure (): TStatement[];
+    protected abstract getNodeStructure (nodeTemplate: string): TStatement[];
 }

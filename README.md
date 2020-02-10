@@ -6,11 +6,9 @@
 
 # JavaScript obfuscator
 
-#### Right now i haven't time to maintain this project and i looking for for maintainers! Create issue if you want to maintain this project.
-
 ![logo](https://raw.githubusercontent.com/javascript-obfuscator/javascript-obfuscator/master/images/logo.png)
 
-JavaScript obfuscator is a powerful free obfuscator for JavaScript with a wide number of features which provides protection for your source code.
+JavaScript Obfuscator is a powerful free obfuscator for JavaScript, containing a variety of features which provide protection for your source code.
 
 Example of obfuscated code: [gist.github.com](https://gist.github.com/sanex3339/ffc2876123b52e6d11ce45369fd53acf)
 
@@ -38,15 +36,16 @@ Example of obfuscated code: [gist.github.com](https://gist.github.com/sanex3339/
 * (Bitcoin) 14yhtZxLNp6ekZAgmEmPJqEKUP2VtUxQK6
 * (Ether) 0x5Df9eBcFB2D0f3315d03Ac112104b9023C409dc1
 * (OpenCollective) https://opencollective.com/javascript-obfuscator
+* PayPal https://www.paypal.me/javascriptobfuscator
 
-Big thanks to all supporters!
+Huge thanks to all supporters!
 
 #### *NOTE! the README on the master branch might not match that of the latest stable release!*
 
-#### If you have a question - check this section first: [FAQ](#frequently-asked-questions)
+#### If you have a question, check this section first: [FAQ](#frequently-asked-questions)
 
 ## :warning: Important
-##### Obfuscate only the code that belongs to you. 
+##### Only obfuscate the code that belongs to you. 
 
 It is not recommended to obfuscate vendor scripts and polyfills, since the obfuscated code is 15-80% slower (depends on options) and the files are significantly larger.
 
@@ -69,13 +68,13 @@ $ npm install --save-dev javascript-obfuscator
 From CDN:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator/dist/index.browser.js"/>
+<script src="https://cdn.jsdelivr.net/npm/javascript-obfuscator/dist/index.browser.js"></script>
 ```
 
 From `node_modules`:
 
 ```html
-<script src="./node_modules/javascript-obfuscator/dist/index.browser.js"/>
+<script src="./node_modules/javascript-obfuscator/dist/index.browser.js"></script>
 ```
 
 ## Usage
@@ -201,7 +200,7 @@ Method takes two parameters, `sourceCode` and `options` – the source code and 
 * `sourceCode` (`string`, default: `null`) – any valid source code, passed as a string;
 * `options` (`Object`, default: `null`) – an object with options.
 
-For available options see [options](#options).
+For available options, see [options](#options).
 
 ## CLI usage
 
@@ -217,9 +216,9 @@ javascript-obfuscator input_file_name.js --output output_file_name.js [options]
 
 Obfuscation of single input file with `.js` extension.
 
-If the destination path is not specified with the `--output` option, obfuscated file will saved into the input file directory with `INPUT_FILE_NAME-obfuscated.js` name.
+If the destination path is not specified with the `--output` option, the obfuscated file will be saved into the input file directory, with `INPUT_FILE_NAME-obfuscated.js` name.
 
-Examples:
+Some examples:
 ```sh
 javascript-obfuscator samples/sample.js --compact true --self-defending false
 // creates a new file samples/sample-obfuscated.js
@@ -265,6 +264,10 @@ For example:
 * Obfuscation of the variable's name at its declaration is called direct transformation;
 * Obfuscation of the variable's name beyond its declaration is called child transformation.
 
+## Kind of variables
+
+Kind of variables of inserted nodes will auto-detected, based on most prevailing kind of variables of source code.
+
 ## Antiviruses false positive virus alerts
 
 Some input source code that will obfuscated with some obfuscation options can trigger false positive alerts in a few antiviruses. If you will get this false positive triggers, try to play with obfuscation options.
@@ -294,6 +297,7 @@ Following options are available for the JS Obfuscator:
     disableConsoleOutput: false,
     domainLock: [],
     identifierNamesGenerator: 'hexadecimal',
+    identifiersDictionary: [],
     identifiersPrefix: '',
     inputFileName: '',
     log: false,
@@ -303,10 +307,13 @@ Following options are available for the JS Obfuscator:
     rotateStringArray: true,
     seed: 0,
     selfDefending: false,
+    shuffleStringArray: true,
     sourceMap: false,
     sourceMapBaseUrl: '',
     sourceMapFileName: '',
     sourceMapMode: 'separate',
+    splitStrings: false,
+    splitStringsChunkLength: 10,
     stringArray: true,
     stringArrayEncoding: false,
     stringArrayThreshold: 0.75,
@@ -334,19 +341,23 @@ Following options are available for the JS Obfuscator:
     --disable-console-output <boolean>
     --domain-lock '<list>' (comma separated)
     --exclude '<list>' (comma separated)
-    --identifier-names-generator <string> [hexadecimal, mangled]
+    --identifier-names-generator <string> [dictionary, hexadecimal, mangled]
+    --identifiers-dictionary '<list>' (comma separated)
     --identifiers-prefix <string>
     --log <boolean>
     --rename-globals <boolean>
     --reserved-names '<list>' (comma separated)
     --reserved-strings '<list>' (comma separated)
     --rotate-string-array <boolean>
-    --seed <number>
+    --seed <string|number>
     --self-defending <boolean>
+    --shuffle-string-array <boolean>
     --source-map <boolean>
     --source-map-base-url <string>
     --source-map-file-name <string>
     --source-map-mode <string> [inline, separate]
+    --split-strings <boolean>
+    --split-strings-chunk-length <number>
     --string-array <boolean>
     --string-array-encoding <boolean|string> [true, false, base64, rc4]
     --string-array-threshold <number>
@@ -438,7 +449,7 @@ Example:
 ### `controlFlowFlatteningThreshold`
 Type: `number` Default: `0.75` Min: `0` Max: `1`
 
-The probability that the [`controlFlowFlattening`](#controlflowflattening) transformation will be applied to the node.
+The probability that the [`controlFlowFlattening`](#controlflowflattening) transformation will be applied to any given node.
 
 This setting is especially useful for large code size because large amounts of control flow transformations can slow down your code and increase code size.
 
@@ -450,7 +461,7 @@ Type: `boolean` Default: `false`
 ##### :warning: Dramatically increases size of obfuscated code (up to 200%), use only if size of obfuscated code doesn't matter. Use [`deadCodeInjectionThreshold`](#deadcodeinjectionthreshold) to set percentage of nodes that will affected by dead code injection.
 ##### :warning: This option forcibly enables `stringArray` option.
 
-With this option random blocks of dead code will add to the obfuscated code. 
+With this option, random blocks of dead code will be added to the obfuscated code. 
 
 Example:
 ```ts
@@ -579,10 +590,12 @@ Disables the use of `console.log`, `console.info`, `console.error`, `console.war
 ### `domainLock`
 Type: `string[]` Default: `[]`
 
-Locks the obfuscated source code so it only runs on specific domains and/or sub-domains. This makes really hard for someone just copy and paste your source code and run elsewhere.
+##### :warning: This option does not work with `target: 'node'`
+
+Locks the obfuscated source code so it only runs on specific domains and/or sub-domains. This makes really hard for someone to just copy and paste your source code and run it elsewhere.
 
 ##### Multiple domains and sub-domains
-It's possible to lock your code to more than one domain or sub-domain. For instance, to lock it so the code only runs on **www.example.com** add `www.example.com`, to make it work on any sub-domain from example.com, use `.example.com`.
+It's possible to lock your code to more than one domain or sub-domain. For instance, to lock it so the code only runs on **www.example.com** add `www.example.com`. To make it work on any sub-domain from example.com, use `.example.com`.
 
 ### `exclude`
 Type: `string[]` Default: `[]`
@@ -595,8 +608,14 @@ Type: `string` Default: `hexadecimal`
 Sets identifier names generator.
 
 Available values:
+* `dictionary`: identifier names from [`identifiersDictionary`](#identifiersDictionary) list
 * `hexadecimal`: identifier names like `_0xabc123`
 * `mangled`: short identifier names like `a`, `b`, `c`
+
+### `identifiersDictionary`
+Type: `string[]` Default: `[]`
+
+Sets identifiers dictionary for [`identifierNamesGenerator`](#identifierNamesGenerator): `dictionary` option. Each identifier from the dictionary will be used in a few variants with a different casing of each character. Thus, the number of identifiers in the dictionary should depend on the identifiers amount at original source code.
 
 ### `identifiersPrefix`
 Type: `string` Default: `''`
@@ -663,7 +682,7 @@ Shift the `stringArray` array by a fixed and random (generated at the code obfus
 This option is recommended if your original source code isn't small, as the helper function can attract attention.
 
 ### `seed`
-Type: `number` Default: `0`
+Type: `string|number` Default: `0`
 
 This option sets seed for random generator. This is useful for creating repeatable results.
 
@@ -676,6 +695,13 @@ Type: `boolean` Default: `false`
 ##### :warning: This option forcibly sets `compact` value to `true`
 
 This option makes the output code resilient against formatting and variable renaming. If one tries to use a JavaScript beautifier on the obfuscated code, the code won't work anymore, making it harder to understand and modify it.
+
+### `shuffleStringArray`
+Type: `boolean` Default: `true`
+
+##### :warning: [`stringArray`](#stringarray) must be enabled
+
+Randomly shuffles the `stringArray` array items.
 
 ### `sourceMap`
 Type: `boolean` Default: `false`
@@ -721,6 +747,29 @@ Specifies source map generation mode:
 * `inline` - emit a single file with source maps instead of having a separate file;
 * `separate` - generates corresponding '.map' file with source map. In case you run obfuscator through CLI - adds link to source map file to the end of file with obfuscated code `//# sourceMappingUrl=file.js.map`.
 
+### `splitStrings`
+Type: `boolean` Default: `false`
+
+Splits literal strings into chunks with length of [`splitStringsChunkLength`](#splitStringsChunkLength) option value.
+
+Example:
+```ts
+// input
+(function(){
+    var test = 'abcdefg';
+})();
+
+// output
+(function(){
+    var _0x5a21 = 'ab' + 'cd' + 'ef' + 'g';
+})();
+```
+
+### `splitStringsChunkLength`
+Type: `number` Default: `10`
+
+Sets chunk length of [`splitStrings`](#splitStrings) option.
+
 ### `stringArray`
 Type: `boolean` Default: `true`
 
@@ -762,7 +811,7 @@ Available values:
 * `browser-no-eval`;
 * `node`.
 
-Currently output code for `browser` and `node` targets is identical.
+Currently output code for `browser` and `node` targets is identical, but some browser-specific options are not allowed to use with `node` target.
 Output code for `browser-no-eval` target is not using `eval`.
 
 ### `transformObjectKeys`
@@ -783,23 +832,25 @@ Example:
 })();
 
 // output
-var _0x5a21 = [
+var _0x2fae = [
+    'baz',
+    'test2',
     'foo',
     'test1',
-    'bar',
-    'baz',
-    'test2'
+    'bar'
 ];
-var _0x223f = function (_0x474dc0, _0x10db96) {
-    _0x474dc0 = _0x474dc0 - 0x0;
-    var _0x4c8bf7 = _0x5a21[_0x474dc0];
-    return _0x4c8bf7;
+var _0x377c = function (_0x1fbd3f, _0x59c72f) {
+    _0x1fbd3f = _0x1fbd3f - 0x0;
+    var _0x14fada = _0x2fae[_0x1fbd3f];
+    return _0x14fada;
 };
 (function () {
-    var _0x2e1a8e = {};
-    _0x2e1a8e[_0x223f('0x0')] = _0x223f('0x1');
-    _0x2e1a8e[_0x223f('0x2')] = {};
-    _0x2e1a8e[_0x223f('0x2')][_0x223f('0x3')] = _0x223f('0x4');
+    var _0x8a12db = {};
+    _0x8a12db[_0x377c('0x0')] = _0x377c('0x1');
+    var _0xc75419 = {};
+    _0xc75419[_0x377c('0x2')] = _0x377c('0x3');
+    _0xc75419[_0x377c('0x4')] = _0x8a12db;
+    var _0x191393 = _0xc75419;
 }());
 ```
 
@@ -830,6 +881,9 @@ Performance will 50-100% slower than without obfuscation
     renameGlobals: false,
     rotateStringArray: true,
     selfDefending: true,
+    shuffleStringArray: true,
+    splitStrings: true,
+    splitStringsChunkLength: '5',
     stringArray: true,
     stringArrayEncoding: 'rc4',
     stringArrayThreshold: 1,
@@ -857,6 +911,9 @@ Performance will 30-35% slower than without obfuscation
     renameGlobals: false,
     rotateStringArray: true,
     selfDefending: true,
+    shuffleStringArray: true,
+    splitStrings: true,
+    splitStringsChunkLength: '10',
     stringArray: true,
     stringArrayEncoding: 'base64',
     stringArrayThreshold: 0.75,
@@ -882,6 +939,8 @@ Performance will slightly slower than without obfuscation
     renameGlobals: false,
     rotateStringArray: true,
     selfDefending: true,
+    shuffleStringArray: true,
+    splitStrings: false,
     stringArray: true,
     stringArrayEncoding: false,
     stringArrayThreshold: 0.75,
@@ -913,6 +972,10 @@ Likely this is `selfDefending` mechanism. Something is changing source code afte
 ### JSX support?
 
 No. JSX support isn't planned.
+
+### How to change kind of variables of inserted nodes (`var`, `let` or `const`)?
+
+See: [`Kind of variables`](#kind-of-variables)
 
 ## Backers
 
@@ -969,7 +1032,7 @@ Become a sponsor and get your logo on our README on Github with a link to your s
 ## License
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjavascript-obfuscator%2Fjavascript-obfuscator.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjavascript-obfuscator%2Fjavascript-obfuscator?ref=badge_large)
 
-Copyright (C) 2016-2018 [Timofey Kachalov](http://github.com/sanex3339).
+Copyright (C) 2016-2020 [Timofey Kachalov](http://github.com/sanex3339).
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:

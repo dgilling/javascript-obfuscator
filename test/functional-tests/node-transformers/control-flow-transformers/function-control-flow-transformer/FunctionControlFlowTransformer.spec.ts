@@ -11,14 +11,14 @@ describe('FunctionControlFlowTransformer', function () {
 
     const variableMatch: string = '_0x([a-f0-9]){4,6}';
     const rootControlFlowStorageNodeMatch: string = `` +
-        `var *${variableMatch} *= *\\{` +
+        `var ${variableMatch} *= *\\{` +
             `'\\w{5}' *: *function *\\(${variableMatch}, *${variableMatch}\\) *\\{` +
                 `return *${variableMatch} *\\+ *${variableMatch};` +
             `\\}` +
         `\\};` +
     ``;
     const innerControlFlowStorageNodeMatch: string = `` +
-        `var *${variableMatch} *= *\\{` +
+        `var ${variableMatch} *= *\\{` +
             `'\\w{5}' *: *function *\\(${variableMatch}, *${variableMatch}\\) *\\{` +
                 `return *${variableMatch}\\['\\w{5}'\\]\\(${variableMatch}, *${variableMatch}\\);` +
             `\\}` +
@@ -101,7 +101,7 @@ describe('FunctionControlFlowTransformer', function () {
 
         describe('Variant #3 - single `control flow storage` node with multiple items', () => {
             const regexp: RegExp = new RegExp(
-                `var *${variableMatch} *= *\\{` +
+                `var ${variableMatch} *= *\\{` +
                     `'\\w{5}' *: *function *\\(${variableMatch}, *${variableMatch}\\) *\\{` +
                         `return *${variableMatch} *\\+ *${variableMatch};` +
                     `\\}, *` +
@@ -132,7 +132,7 @@ describe('FunctionControlFlowTransformer', function () {
         });
 
         describe('Variant #4 - transformed node in the root block scope', () => {
-            const regExp: RegExp = /^var *test *= *0x1 *\+ *0x2;$/;
+            const regExp: RegExp = /^var test *= *0x1 *\+ *0x2;$/;
 
             let obfuscatedCode: string;
 
@@ -159,7 +159,7 @@ describe('FunctionControlFlowTransformer', function () {
             const samplesCount: number = 20;
 
             const regExp: RegExp = new RegExp(
-                `var *[a-zA-Z]{6} *= *\\{` +
+                `var [a-zA-Z]{6} *= *\\{` +
                     `'\\w{5}' *: *function *\\(${variableMatch}, *${variableMatch}\\) *\\{` +
                         `return *${variableMatch} *\\+ *${variableMatch};` +
                     `\\}` +
@@ -194,7 +194,7 @@ describe('FunctionControlFlowTransformer', function () {
         });
 
         describe('Variant #6 - threshold is `0`', () => {
-            const regexp: RegExp = /var *_0x([a-f0-9]){4,6} *= *0x1 *\+ *0x2;/;
+            const regexp: RegExp = /var _0x([a-f0-9]){4,6} *= *0x1 *\+ *0x2;/;
             const controlFlowStorageRegExp: RegExp = new RegExp(rootControlFlowStorageNodeMatch);
 
             let obfuscatedCode: string;
@@ -246,7 +246,7 @@ describe('FunctionControlFlowTransformer', function () {
             });
 
             describe('Variant #2 - arrow function expression without body', () => {
-                const regexp: RegExp = new RegExp(`var *${variableMatch} *= *\\(\\) *=> *0x1 *\\+ *0x2;`);
+                const regexp: RegExp = new RegExp(`var ${variableMatch} *= *\\(\\) *=> *0x1 *\\+ *0x2;`);
 
                 let obfuscatedCode: string;
 
@@ -264,6 +264,77 @@ describe('FunctionControlFlowTransformer', function () {
                 });
 
                 it('shouldn\'t add `control flow storage` node to the obfuscated code', () => {
+                    assert.match(obfuscatedCode, regexp);
+                });
+            });
+        });
+
+        describe('prevailing kind of variables', () => {
+            describe('Variant #1 - `var` kind', () => {
+                const regexp: RegExp = new RegExp(`var ${variableMatch} *= *\\{`);
+
+                let obfuscatedCode: string;
+
+                before(() => {
+                    const code: string = readFileAsString(__dirname + '/fixtures/prevailing-kind-of-variables-var.js');
+
+                    obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                        code,
+                        {
+                            ...NO_ADDITIONAL_NODES_PRESET,
+                            controlFlowFlattening: true,
+                            controlFlowFlatteningThreshold: 1
+                        }
+                    ).getObfuscatedCode();
+                });
+
+                it('should use correct kind of variables for `control flow storage`', () => {
+                    assert.match(obfuscatedCode, regexp);
+                });
+            });
+
+            describe('Variant #2 - `const` kind', () => {
+                const regexp: RegExp = new RegExp(`const ${variableMatch} *= *\\{`);
+
+                let obfuscatedCode: string;
+
+                before(() => {
+                    const code: string = readFileAsString(__dirname + '/fixtures/prevailing-kind-of-variables-const.js');
+
+                    obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                        code,
+                        {
+                            ...NO_ADDITIONAL_NODES_PRESET,
+                            controlFlowFlattening: true,
+                            controlFlowFlatteningThreshold: 1
+                        }
+                    ).getObfuscatedCode();
+                });
+
+                it('should use correct kind of variables for `control flow storage`', () => {
+                    assert.match(obfuscatedCode, regexp);
+                });
+            });
+
+            describe('Variant #3 - `let` kind', () => {
+                const regexp: RegExp = new RegExp(`const ${variableMatch} *= *\\{`);
+
+                let obfuscatedCode: string;
+
+                before(() => {
+                    const code: string = readFileAsString(__dirname + '/fixtures/prevailing-kind-of-variables-let.js');
+
+                    obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                        code,
+                        {
+                            ...NO_ADDITIONAL_NODES_PRESET,
+                            controlFlowFlattening: true,
+                            controlFlowFlatteningThreshold: 1
+                        }
+                    ).getObfuscatedCode();
+                });
+
+                it('should use correct kind of variables for `control flow storage`', () => {
                     assert.match(obfuscatedCode, regexp);
                 });
             });

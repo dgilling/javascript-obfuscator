@@ -14,7 +14,7 @@ export class ArrayUtils implements IArrayUtils {
     /**
      * @param {IRandomGenerator} randomGenerator
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator
     ) {
         this.randomGenerator = randomGenerator;
@@ -36,12 +36,43 @@ export class ArrayUtils implements IArrayUtils {
 
     /**
      * @param {T[]} array
+     * @returns {T | null}
+     */
+    public findMostOccurringElement <T extends string | number> (array: T[]): T | null {
+        const arrayLength: number = array.length;
+
+        if (!arrayLength) {
+            return null;
+        }
+
+        const elementsMap: Partial<{[key in T]: number}> = {};
+
+        let mostOccurringElement: T = array[0];
+        let mostOccurringElementCount: number = 1;
+
+        for (const element of array) {
+            const currentElementCount: number = elementsMap[element] ?? 0;
+            const updatedElementCount: number = currentElementCount + 1;
+
+            if (updatedElementCount > mostOccurringElementCount) {
+                mostOccurringElement = element;
+                mostOccurringElementCount = updatedElementCount;
+            }
+
+            elementsMap[element] = updatedElementCount;
+        }
+
+        return mostOccurringElement;
+    }
+
+    /**
+     * @param {T[]} array
      * @param {number} times
      * @returns {T[]}
      */
     public rotate <T> (array: T[], times: number): T[] {
         if (!array.length) {
-            throw new ReferenceError(`Cannot rotate empty array.`);
+            throw new ReferenceError('Cannot rotate empty array.');
         }
 
         if (times <= 0) {

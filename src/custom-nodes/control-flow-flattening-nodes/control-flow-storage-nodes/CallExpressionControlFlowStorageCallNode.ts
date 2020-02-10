@@ -1,17 +1,14 @@
 import { inject, injectable, } from 'inversify';
 import { ServiceIdentifiers } from '../../../container/ServiceIdentifiers';
 
-import * as ESTree from 'estree';
-
-// tslint:disable
-import { Expression } from 'estree';
-// tslint:enable
+import type * as ESTree from 'estree';
 
 import { TIdentifierNamesGeneratorFactory } from '../../../types/container/generators/TIdentifierNamesGeneratorFactory';
 import { TStatement } from '../../../types/node/TStatement';
 
 import { IOptions } from '../../../interfaces/options/IOptions';
-import { IRandomGenerator } from "../../../interfaces/utils/IRandomGenerator";
+import { IRandomGenerator } from '../../../interfaces/utils/IRandomGenerator';
+import { ICustomNodeFormatter } from '../../../interfaces/custom-nodes/ICustomNodeFormatter';
 
 import { initializable } from '../../../decorators/Initializable';
 
@@ -25,7 +22,7 @@ export class CallExpressionControlFlowStorageCallNode extends AbstractCustomNode
      * @type {Expression}
      */
     @initializable()
-    private callee!: Expression;
+    private callee!: ESTree.Expression;
 
     /**
      * @type {string}
@@ -47,16 +44,18 @@ export class CallExpressionControlFlowStorageCallNode extends AbstractCustomNode
 
     /**
      * @param {TIdentifierNamesGeneratorFactory} identifierNamesGeneratorFactory
+     * @param {ICustomNodeFormatter} customNodeFormatter
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__IIdentifierNamesGenerator)
             identifierNamesGeneratorFactory: TIdentifierNamesGeneratorFactory,
+        @inject(ServiceIdentifiers.ICustomNodeFormatter) customNodeFormatter: ICustomNodeFormatter,
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
         @inject(ServiceIdentifiers.IOptions) options: IOptions
     ) {
-        super(identifierNamesGeneratorFactory, randomGenerator, options);
+        super(identifierNamesGeneratorFactory, customNodeFormatter, randomGenerator, options);
     }
 
     /**

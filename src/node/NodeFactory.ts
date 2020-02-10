@@ -1,6 +1,4 @@
-/* tslint:disable:max-file-line-count */
-
-import * as escodegen from 'escodegen-wallaby';
+import * as escodegen from 'escodegen';
 import * as ESTree from 'estree';
 
 import { TStatement } from '../types/node/TStatement';
@@ -129,6 +127,23 @@ export class NodeFactory {
     }
 
     /**
+     * @param {Literal} expression
+     * @param {string} directive
+     * @returns {Directive}
+     */
+    public static directiveNode (
+        expression: ESTree.Literal,
+        directive: string
+    ): ESTree.Directive {
+        return {
+            type: NodeType.ExpressionStatement,
+            expression,
+            directive,
+            metadata: { ignoredNode: false }
+        };
+    }
+
+    /**
      * @param {Expression} expression
      * @returns {ExpressionStatement}
      */
@@ -207,6 +222,23 @@ export class NodeFactory {
         return {
             type: NodeType.Identifier,
             name,
+            metadata: { ignoredNode: false }
+        };
+    }
+
+    /**
+     * @param {(ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier)[]} specifiers
+     * @param {Literal} source
+     * @returns {ImportDeclaration}
+     */
+    public static importDeclarationNode (
+        specifiers: (ESTree.ImportSpecifier | ESTree.ImportDefaultSpecifier | ESTree.ImportNamespaceSpecifier)[],
+        source: ESTree.Literal
+    ): ESTree.ImportDeclaration {
+        return {
+            type: NodeType.ImportDeclaration,
+            specifiers,
+            source,
             metadata: { ignoredNode: false }
         };
     }

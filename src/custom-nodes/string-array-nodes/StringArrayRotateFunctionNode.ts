@@ -1,14 +1,13 @@
 import { inject, injectable, } from 'inversify';
 import { ServiceIdentifiers } from '../../container/ServiceIdentifiers';
 
-import format from 'string-template';
-
 import { TIdentifierNamesGeneratorFactory } from '../../types/container/generators/TIdentifierNamesGeneratorFactory';
 import { TStatement } from '../../types/node/TStatement';
 
 import { IEscapeSequenceEncoder } from '../../interfaces/utils/IEscapeSequenceEncoder';
 import { IOptions } from '../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../interfaces/utils/IRandomGenerator';
+import { ICustomNodeFormatter } from '../../interfaces/custom-nodes/ICustomNodeFormatter';
 
 import { initializable } from '../../decorators/Initializable';
 
@@ -39,56 +38,59 @@ export class StringArrayRotateFunctionNode extends AbstractCustomNode {
      * @param {number}
      */
     @initializable()
-    private stringArrayRotateValue!: number;
+    private stringArrayRotationAmount!: number;
 
     /**
      * @param {TIdentifierNamesGeneratorFactory} identifierNamesGeneratorFactory
+     * @param {ICustomNodeFormatter} customNodeFormatter
      * @param {IRandomGenerator} randomGenerator
-     * @param {IEscapeSequenceEncoder} escapeSequenceEncoder
      * @param {IOptions} options
+     * @param {IEscapeSequenceEncoder} escapeSequenceEncoder
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__IIdentifierNamesGenerator)
             identifierNamesGeneratorFactory: TIdentifierNamesGeneratorFactory,
+        @inject(ServiceIdentifiers.ICustomNodeFormatter) customNodeFormatter: ICustomNodeFormatter,
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
-        @inject(ServiceIdentifiers.IEscapeSequenceEncoder) escapeSequenceEncoder: IEscapeSequenceEncoder,
-        @inject(ServiceIdentifiers.IOptions) options: IOptions
+        @inject(ServiceIdentifiers.IOptions) options: IOptions,
+        @inject(ServiceIdentifiers.IEscapeSequenceEncoder) escapeSequenceEncoder: IEscapeSequenceEncoder
     ) {
-        super(identifierNamesGeneratorFactory, randomGenerator, options);
+        super(identifierNamesGeneratorFactory, customNodeFormatter, randomGenerator, options);
 
         this.escapeSequenceEncoder = escapeSequenceEncoder;
     }
 
     /**
      * @param {string} stringArrayName
-     * @param {number} stringArrayRotateValue
+     * @param {number} stringArrayRotationAmount
      */
     public initialize (
         stringArrayName: string,
-        stringArrayRotateValue: number
+        stringArrayRotationAmount: number
     ): void {
         this.stringArrayName = stringArrayName;
-        this.stringArrayRotateValue = stringArrayRotateValue;
+        this.stringArrayRotationAmount = stringArrayRotationAmount;
     }
 
     /**
+     * @param {string} nodeTemplate
      * @returns {TStatement[]}
      */
-    protected getNodeStructure (): TStatement[] {
-        return NodeUtils.convertCodeToStructure(this.getTemplate());
+    protected getNodeStructure (nodeTemplate: string): TStatement[] {
+        return NodeUtils.convertCodeToStructure(nodeTemplate);
     }
 
     /**
      * @returns {string}
      */
-    protected getTemplate (): string {
+    protected getNodeTemplate (): string {
         const timesName: string = this.identifierNamesGenerator.generate();
         const whileFunctionName: string = this.identifierNamesGenerator.generate();
 
         let code: string = '';
 
         if (this.options.selfDefending) {
-            code = format(SelfDefendingTemplate(this.escapeSequenceEncoder), {
+            code = this.customNodeFormatter.formatTemplate(SelfDefendingTemplate(this.escapeSequenceEncoder), {
                 timesName,
                 whileFunctionName
             });
@@ -97,17 +99,18 @@ export class StringArrayRotateFunctionNode extends AbstractCustomNode {
         }
 
         return JavaScriptObfuscator.obfuscate(
-            format(StringArrayRotateFunctionTemplate(), {
+            this.customNodeFormatter.formatTemplate(StringArrayRotateFunctionTemplate(), {
                 code,
                 timesName,
                 stringArrayName: this.stringArrayName,
-                stringArrayRotateValue: NumberUtils.toHex(this.stringArrayRotateValue),
+                stringArrayRotationAmount: NumberUtils.toHex(this.stringArrayRotationAmount),
                 whileFunctionName
             }),
             {
                 ...NO_ADDITIONAL_NODES_PRESET,
                 identifierNamesGenerator: this.options.identifierNamesGenerator,
-                seed: this.options.seed
+                identifiersDictionary: this.options.identifiersDictionary,
+                seed: this.randomGenerator.getRawSeed()
             }
         ).getObfuscatedCode();
     }

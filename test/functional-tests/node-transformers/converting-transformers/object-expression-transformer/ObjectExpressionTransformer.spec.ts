@@ -9,7 +9,7 @@ import { JavaScriptObfuscator } from '../../../../../src/JavaScriptObfuscatorFac
 describe('ObjectExpressionTransformer', () => {
     describe('default behaviour', () => {
         describe('Variant #1: `unicodeEscapeSequence` option is disabled\'', () => {
-            const regExp: RegExp = /var *test *= *\{'foo':0x0\};/;
+            const regExp: RegExp = /var test *= *\{'foo':0x0\};/;
 
             let obfuscatedCode: string;
 
@@ -31,7 +31,7 @@ describe('ObjectExpressionTransformer', () => {
         });
 
         describe('Variant #2: `unicodeEscapeSequence` option is enabled', () => {
-            const regExp: RegExp = /var *test *= *\{'\\x66\\x6f\\x6f':0x0\};/;
+            const regExp: RegExp = /var test *= *\{'\\x66\\x6f\\x6f':0x0\};/;
 
             let obfuscatedCode: string;
 
@@ -54,7 +54,7 @@ describe('ObjectExpressionTransformer', () => {
     });
 
     describe('shorthand ES6 object expression', () => {
-        const regExp: RegExp = /var *_0x[a-f0-9]{4,6} *= *\{'a': *_0x[a-f0-9]{4,6}\, *'b': *_0x[a-f0-9]{4,6}\};/;
+        const regExp: RegExp = /var _0x[a-f0-9]{4,6} *= *\{'a': *_0x[a-f0-9]{4,6}\, *'b': *_0x[a-f0-9]{4,6}\};/;
 
         let obfuscatedCode: string;
 
@@ -76,7 +76,7 @@ describe('ObjectExpressionTransformer', () => {
 
     describe('computed property name', () => {
         describe('Variant #1: computed property name with identifier', () => {
-            const regExp: RegExp = /var *_0x[a-f0-9]{4,6} *= *\{\[_0x[a-f0-9]{4,6}\]: *0x1\};/;
+            const regExp: RegExp = /var _0x[a-f0-9]{4,6} *= *\{\[_0x[a-f0-9]{4,6}\]: *0x1\};/;
 
             let obfuscatedCode: string;
 
@@ -98,7 +98,7 @@ describe('ObjectExpressionTransformer', () => {
 
         describe('Variant #2: computed property name with literal', () => {
             describe('Variant #1: `unicodeEscapeSequence` option is disabled', () => {
-                const regExp: RegExp = /var *_0x[a-f0-9]{4,6} *= *\{\['foo'\]: *0x1\};/;
+                const regExp: RegExp = /var _0x[a-f0-9]{4,6} *= *\{\['foo'\]: *0x1\};/;
 
                 let obfuscatedCode: string;
 
@@ -120,7 +120,7 @@ describe('ObjectExpressionTransformer', () => {
             });
 
             describe('Variant #2: `unicodeEscapeSequence` option is enabled', () => {
-                const regExp: RegExp = /var *_0x[a-f0-9]{4,6} *= *\{\['\\x66\\x6f\\x6f'\]: *0x1\};/;
+                const regExp: RegExp = /var _0x[a-f0-9]{4,6} *= *\{\['\\x66\\x6f\\x6f'\]: *0x1\};/;
 
                 let obfuscatedCode: string;
 
@@ -144,8 +144,8 @@ describe('ObjectExpressionTransformer', () => {
     });
 
     describe('object rest', () => {
-        const objectRegExp: RegExp = /var *_0x[a-f0-9]{4,6} *= *\{'foo': *0x1, *'bar': *0x2, *'baz': *0x3\};/;
-        const objectRestRegExp: RegExp = /var *\{foo, *\.\.\.*_0x[a-f0-9]{4,6}\} *= *_0x[a-f0-9]{4,6};/;
+        const objectRegExp: RegExp = /var _0x[a-f0-9]{4,6} *= *\{'foo': *0x1, *'bar': *0x2, *'baz': *0x3\};/;
+        const objectRestRegExp: RegExp = /var \{foo, *\.\.\.*_0x[a-f0-9]{4,6}\} *= *_0x[a-f0-9]{4,6};/;
 
         let obfuscatedCode: string;
 
@@ -170,9 +170,9 @@ describe('ObjectExpressionTransformer', () => {
     });
 
     describe('object spread', () => {
-        const object1RegExp: RegExp = /var *_0x[a-f0-9]{4,6} *= *\{'foo': *0x1\};/;
-        const object2RegExp: RegExp = /var *_0x[a-f0-9]{4,6} *= *\{'bar': *0x2\};/;
-        const objectSpreadRegExp: RegExp = /var *_0x[a-f0-9]{4,6} *= *\{\.\.\._0x[a-f0-9]{4,6}, *\.\.\._0x[a-f0-9]{4,6}\};/;
+        const object1RegExp: RegExp = /var _0x[a-f0-9]{4,6} *= *\{'foo': *0x1\};/;
+        const object2RegExp: RegExp = /var _0x[a-f0-9]{4,6} *= *\{'bar': *0x2\};/;
+        const objectSpreadRegExp: RegExp = /var _0x[a-f0-9]{4,6} *= *\{\.\.\._0x[a-f0-9]{4,6}, *\.\.\._0x[a-f0-9]{4,6}\};/;
 
         let obfuscatedCode: string;
 
@@ -197,6 +197,39 @@ describe('ObjectExpressionTransformer', () => {
 
         it('Match #3: should transform object spread construction', () => {
             assert.match(obfuscatedCode, objectSpreadRegExp);
+        });
+    });
+
+    describe('object spread: unicode escape sequence', () => {
+        const object1RegExp: RegExp = /const _0x[a-f0-9]{4,6} *= *\{\};/;
+        const object2RegExp: RegExp = /_0x[a-f0-9]{4,6}\['\\x61'\] *= *0x1;/;
+        const object3RegExp: RegExp = /const \{a\} *= *_0x[a-f0-9]{4,6};/;
+
+        let obfuscatedCode: string;
+
+        before(() => {
+            const code: string = readFileAsString(__dirname + '/fixtures/object-spread-unicode-escape-sequence.js');
+
+            obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                code,
+                {
+                    ...NO_ADDITIONAL_NODES_PRESET,
+                    transformObjectKeys: true,
+                    unicodeEscapeSequence: true
+                }
+            ).getObfuscatedCode();
+        });
+
+        it('Match #1: should transform object declaration', () => {
+            assert.match(obfuscatedCode, object1RegExp);
+        });
+
+        it('Match #2: should transform object name once', () => {
+            assert.match(obfuscatedCode, object2RegExp);
+        });
+
+        it('Match #3: do not transform object name in spread assignment', () => {
+            assert.match(obfuscatedCode, object3RegExp);
         });
     });
 });

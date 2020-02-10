@@ -84,8 +84,9 @@ describe('BlockStatementControlFlowTransformer', function () {
             });
 
             describe('switch-case map', () => {
-                const switchCaseMapVariableRegExp: RegExp = /var *_0x(?:[a-f0-9]){4,6} *= *_0x(?:[a-f0-9]){4,6}\['.*'\]\['split'\]\('\|'\)/;
-                const switchCaseMapStringRegExp: RegExp = /var *_0x(?:[a-f0-9]){4,6} *= *\{'.*' *: *'(.*)'\};/;
+                const switchCaseMapVariableRegExp: RegExp = /var _0x(?:[a-f0-9]){4,6} *= *_0x(?:[a-f0-9]){4,6}\['.*'\]\['split'\]\('\|'\)/;
+                const switchCaseMapIndexVariableRegExp: RegExp = /var _0x(?:[a-f0-9]){4,6} *= *0x0;/;
+                const switchCaseMapStringRegExp: RegExp = /var _0x(?:[a-f0-9]){4,6} *= *\{'.*' *: *'(.*)'\};/;
                 const expectedSwitchCasesSequence: string[] = ['0', '1', '2', '3', '4'];
 
                 let switchCaseMap: string[];
@@ -98,6 +99,10 @@ describe('BlockStatementControlFlowTransformer', function () {
 
                 it('should create switch-case map variable', () => {
                     assert.match(obfuscatedCode, switchCaseMapVariableRegExp);
+                });
+
+                it('should use correct kind of index variable for switch-case map', () => {
+                    assert.match(obfuscatedCode, switchCaseMapIndexVariableRegExp);
                 });
 
                 it('should create valid switch-case map variable with order of switch cases sequence', () => {
@@ -172,8 +177,8 @@ describe('BlockStatementControlFlowTransformer', function () {
             });
 
             describe('switch-case map', () => {
-                const switchCaseMapVariableRegExp: RegExp = /var *_0x(?:[a-f0-9]){4,6} *= *_0x(?:[a-f0-9]){4,6}\['.*'\]\['split'\]\('\|'\)/;
-                const switchCaseMapStringRegExp: RegExp = /var *_0x(?:[a-f0-9]){4,6} *= *\{'.*' *: *'(.*)'\};/;
+                const switchCaseMapVariableRegExp: RegExp = /var _0x(?:[a-f0-9]){4,6} *= *_0x(?:[a-f0-9]){4,6}\['.*'\]\['split'\]\('\|'\)/;
+                const switchCaseMapStringRegExp: RegExp = /var _0x(?:[a-f0-9]){4,6} *= *\{'.*' *: *'(.*)'\};/;
                 const expectedSwitchCasesSequence: string[] = ['0', '1', '2', '3', '4'];
 
                 let switchCaseMap: string[];
@@ -218,7 +223,7 @@ describe('BlockStatementControlFlowTransformer', function () {
         });
 
         describe('Variant #4: block statement contain variable declaration with `const` kind', () => {
-            const statementRegExp: RegExp = /^\(function *\( *\) *\{ *const *_0x([a-f0-9]){4,6} *= *0x1; *console\['log'\]\(0x1\);/;
+            const statementRegExp: RegExp = /^\(function *\( *\) *\{ *const _0x([a-f0-9]){4,6} *= *0x1; *console\['log'\]\(0x1\);/;
 
             let obfuscatedCode: string;
 
@@ -241,7 +246,7 @@ describe('BlockStatementControlFlowTransformer', function () {
         });
 
         describe('Variant #5: block statement contain variable declaration with `let` kind', () => {
-            const statementRegExp: RegExp = /^\(function *\( *\) *\{ *let *_0x([a-f0-9]){4,6} *= *0x1; *console\['log'\]\(0x1\);/;
+            const statementRegExp: RegExp = /^\(function *\( *\) *\{ *let _0x([a-f0-9]){4,6} *= *0x1; *console\['log'\]\(0x1\);/;
 
             let obfuscatedCode: string;
 
@@ -648,6 +653,140 @@ describe('BlockStatementControlFlowTransformer', function () {
 
             it('should not add `continue` statement after `return` statement', () => {
                 assert.match(obfuscatedCode, returnStatementRegExp);
+            });
+        });
+
+        describe('Prevailing kind of variables', () => {
+            describe('`var` kind', () => {
+                let obfuscatedCode: string;
+
+                before(() => {
+                    const code: string = readFileAsString(__dirname + '/fixtures/prevailing-kind-of-variables-var.js');
+
+                    obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                        code,
+                        {
+                            ...NO_ADDITIONAL_NODES_PRESET,
+                            controlFlowFlattening: true,
+                            controlFlowFlatteningThreshold: 1
+                        }
+                    ).getObfuscatedCode();
+                });
+
+                describe('switch-case map', () => {
+                    const switchCaseMapVariableRegExp: RegExp = /var _0x(?:[a-f0-9]){4,6} *= *_0x(?:[a-f0-9]){4,6}\['.*'\]\['split'\]\('\|'\);/;
+                    const switchCaseMapIndexVariableRegExp: RegExp = /var _0x(?:[a-f0-9]){4,6} *= *0x0;/;
+                    const switchCaseMapStringRegExp: RegExp = /var _0x(?:[a-f0-9]){4,6} *= *\{'.*' *: *'(.*)'\};/;
+                    const expectedSwitchCasesSequence: string[] = ['0', '1', '2', '3', '4'];
+
+                    let switchCaseMap: string[];
+
+                    before(() => {
+                        const switchCaseMapMatch: string = getRegExpMatch(obfuscatedCode, switchCaseMapStringRegExp);
+
+                        switchCaseMap = switchCaseMapMatch.split('|').sort();
+                    });
+
+                    it('should use correct kind of variable for switch-case map', () => {
+                        assert.match(obfuscatedCode, switchCaseMapVariableRegExp);
+                    });
+
+                    it('should use correct kind of index variable for switch-case map', () => {
+                        assert.match(obfuscatedCode, switchCaseMapIndexVariableRegExp);
+                    });
+
+                    it('should use correct kind of variable for switch cases sequence', () => {
+                        assert.deepEqual(switchCaseMap, expectedSwitchCasesSequence);
+                    });
+                });
+            });
+
+            describe('`const` kind', () => {
+                let obfuscatedCode: string;
+
+                before(() => {
+                    const code: string = readFileAsString(__dirname + '/fixtures/prevailing-kind-of-variables-const.js');
+
+                    obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                        code,
+                        {
+                            ...NO_ADDITIONAL_NODES_PRESET,
+                            controlFlowFlattening: true,
+                            controlFlowFlatteningThreshold: 1
+                        }
+                    ).getObfuscatedCode();
+                });
+
+                describe('switch-case map', () => {
+                    const switchCaseMapVariableRegExp: RegExp = /const _0x(?:[a-f0-9]){4,6} *= *_0x(?:[a-f0-9]){4,6}\['.*'\]\['split'\]\('\|'\);/;
+                    const switchCaseMapIndexVariableRegExp: RegExp = /let _0x(?:[a-f0-9]){4,6} *= *0x0;/;
+                    const switchCaseMapStringRegExp: RegExp = /const _0x(?:[a-f0-9]){4,6} *= *\{'.*' *: *'(.*)'\};/;
+                    const expectedSwitchCasesSequence: string[] = ['0', '1', '2', '3', '4'];
+
+                    let switchCaseMap: string[];
+
+                    before(() => {
+                        const switchCaseMapMatch: string = getRegExpMatch(obfuscatedCode, switchCaseMapStringRegExp);
+
+                        switchCaseMap = switchCaseMapMatch.split('|').sort();
+                    });
+
+                    it('should use correct kind of variable for switch-case map', () => {
+                        assert.match(obfuscatedCode, switchCaseMapVariableRegExp);
+                    });
+
+                    it('should use correct kind of index variable for switch-case map', () => {
+                        assert.match(obfuscatedCode, switchCaseMapIndexVariableRegExp);
+                    });
+
+                    it('should use correct kind of variable for switch cases sequence', () => {
+                        assert.deepEqual(switchCaseMap, expectedSwitchCasesSequence);
+                    });
+                });
+            });
+
+            describe('`let` kind', () => {
+                let obfuscatedCode: string;
+
+                before(() => {
+                    const code: string = readFileAsString(__dirname + '/fixtures/prevailing-kind-of-variables-let.js');
+
+                    obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                        code,
+                        {
+                            ...NO_ADDITIONAL_NODES_PRESET,
+                            controlFlowFlattening: true,
+                            controlFlowFlatteningThreshold: 1
+                        }
+                    ).getObfuscatedCode();
+                });
+
+                describe('switch-case map', () => {
+                    const switchCaseMapVariableRegExp: RegExp = /const _0x(?:[a-f0-9]){4,6} *= *_0x(?:[a-f0-9]){4,6}\['.*'\]\['split'\]\('\|'\)/;
+                    const switchCaseMapIndexVariableRegExp: RegExp = /let _0x(?:[a-f0-9]){4,6} *= *0x0;/;
+                    const switchCaseMapStringRegExp: RegExp = /const _0x(?:[a-f0-9]){4,6} *= *\{'.*' *: *'(.*)'\};/;
+                    const expectedSwitchCasesSequence: string[] = ['0', '1', '2', '3', '4'];
+
+                    let switchCaseMap: string[];
+
+                    before(() => {
+                        const switchCaseMapMatch: string = getRegExpMatch(obfuscatedCode, switchCaseMapStringRegExp);
+
+                        switchCaseMap = switchCaseMapMatch.split('|').sort();
+                    });
+
+                    it('should use correct kind of variable for switch-case map', () => {
+                        assert.match(obfuscatedCode, switchCaseMapVariableRegExp);
+                    });
+
+                    it('should use correct kind of index variable for switch-case map', () => {
+                        assert.match(obfuscatedCode, switchCaseMapIndexVariableRegExp);
+                    });
+
+                    it('should use correct kind of variable for switch cases sequence', () => {
+                        assert.deepEqual(switchCaseMap, expectedSwitchCasesSequence);
+                    });
+                });
             });
         });
     });

@@ -5,6 +5,7 @@ import * as estraverse from 'estraverse';
 import * as ESTree from 'estree';
 
 import { TControlFlowCustomNodeFactory } from '../../types/container/custom-nodes/TControlFlowCustomNodeFactory';
+import { TInitialData } from '../../types/TInitialData';
 import { TStatement } from '../../types/node/TStatement';
 
 import { IArrayUtils } from '../../interfaces/utils/IArrayUtils';
@@ -17,6 +18,7 @@ import { ControlFlowCustomNode } from '../../enums/custom-nodes/ControlFlowCusto
 import { TransformationStage } from '../../enums/node-transformers/TransformationStage';
 
 import { AbstractNodeTransformer } from '../AbstractNodeTransformer';
+import { BlockStatementControlFlowFlatteningNode } from '../../custom-nodes/control-flow-flattening-nodes/BlockStatementControlFlowFlatteningNode';
 import { NodeGuards } from '../../node/NodeGuards';
 import { NodeUtils } from '../../node/NodeUtils';
 
@@ -38,7 +40,7 @@ export class BlockStatementControlFlowTransformer extends AbstractNodeTransforme
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__IControlFlowCustomNode)
             controlFlowCustomNodeFactory: TControlFlowCustomNodeFactory,
         @inject(ServiceIdentifiers.IArrayUtils) arrayUtils: IArrayUtils,
@@ -102,7 +104,7 @@ export class BlockStatementControlFlowTransformer extends AbstractNodeTransforme
         switch (transformationStage) {
             case TransformationStage.ControlFlowFlattening:
                 return {
-                    leave: (node: ESTree.Node, parentNode: ESTree.Node | null) => {
+                    leave: (node: ESTree.Node, parentNode: ESTree.Node | null): ESTree.Node | undefined => {
                         if (parentNode && NodeGuards.isBlockStatementNode(node)) {
                             return this.transformNode(node, parentNode);
                         }
@@ -131,9 +133,8 @@ export class BlockStatementControlFlowTransformer extends AbstractNodeTransforme
         const originalKeys: number[] = this.arrayUtils.createWithRange(blockStatementBody.length);
         const shuffledKeys: number[] = this.arrayUtils.shuffle(originalKeys);
         const originalKeysIndexesInShuffledArray: number[] = originalKeys.map((key: number) => shuffledKeys.indexOf(key));
-        const blockStatementControlFlowFlatteningCustomNode: ICustomNode = this.controlFlowCustomNodeFactory(
-            ControlFlowCustomNode.BlockStatementControlFlowFlatteningNode
-        );
+        const blockStatementControlFlowFlatteningCustomNode: ICustomNode<TInitialData<BlockStatementControlFlowFlatteningNode>> =
+            this.controlFlowCustomNodeFactory(ControlFlowCustomNode.BlockStatementControlFlowFlatteningNode);
 
         blockStatementControlFlowFlatteningCustomNode.initialize(
             blockStatementBody,

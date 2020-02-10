@@ -1,13 +1,12 @@
 import { inject, injectable, } from 'inversify';
 import { ServiceIdentifiers } from '../../container/ServiceIdentifiers';
 
-import format from 'string-template';
-
 import { TIdentifierNamesGeneratorFactory } from '../../types/container/generators/TIdentifierNamesGeneratorFactory';
 import { TStatement } from '../../types/node/TStatement';
 
 import { IOptions } from '../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../interfaces/utils/IRandomGenerator';
+import { ICustomNodeFormatter } from '../../interfaces/custom-nodes/ICustomNodeFormatter';
 
 import { ObfuscationTarget } from '../../enums/ObfuscationTarget';
 
@@ -29,16 +28,18 @@ export class ConsoleOutputDisableExpressionNode extends AbstractCustomNode {
 
     /**
      * @param {TIdentifierNamesGeneratorFactory} identifierNamesGeneratorFactory
+     * @param {ICustomNodeFormatter} customNodeFormatter
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__IIdentifierNamesGenerator)
             identifierNamesGeneratorFactory: TIdentifierNamesGeneratorFactory,
+        @inject(ServiceIdentifiers.ICustomNodeFormatter) customNodeFormatter: ICustomNodeFormatter,
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
         @inject(ServiceIdentifiers.IOptions) options: IOptions
     ) {
-        super(identifierNamesGeneratorFactory, randomGenerator, options);
+        super(identifierNamesGeneratorFactory, customNodeFormatter, randomGenerator, options);
     }
 
     /**
@@ -49,21 +50,22 @@ export class ConsoleOutputDisableExpressionNode extends AbstractCustomNode {
     }
 
     /**
+     * @param {string} nodeTemplate
      * @returns {TStatement[]}
      */
-    protected getNodeStructure (): TStatement[] {
-        return NodeUtils.convertCodeToStructure(this.getTemplate());
+    protected getNodeStructure (nodeTemplate: string): TStatement[] {
+        return NodeUtils.convertCodeToStructure(nodeTemplate);
     }
 
     /**
      * @returns {string}
      */
-    protected getTemplate (): string {
+    protected getNodeTemplate (): string {
         const globalVariableTemplate: string = this.options.target !== ObfuscationTarget.BrowserNoEval
             ? this.getGlobalVariableTemplate()
             : GlobalVariableNoEvalTemplate();
 
-        return format(ConsoleOutputDisableExpressionTemplate(), {
+        return this.customNodeFormatter.formatTemplate(ConsoleOutputDisableExpressionTemplate(), {
             consoleLogDisableFunctionName: this.identifierNamesGenerator.generate(),
             globalVariableTemplate,
             singleNodeCallControllerFunctionName: this.callsControllerFunctionName

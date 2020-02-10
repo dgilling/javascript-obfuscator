@@ -1,14 +1,13 @@
 import { inject, injectable, } from 'inversify';
 import { ServiceIdentifiers } from '../../container/ServiceIdentifiers';
 
-import format from 'string-template';
-
 import { TIdentifierNamesGeneratorFactory } from '../../types/container/generators/TIdentifierNamesGeneratorFactory';
 import { TStatement } from '../../types/node/TStatement';
 
 import { IEscapeSequenceEncoder } from '../../interfaces/utils/IEscapeSequenceEncoder';
 import { IOptions } from '../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../interfaces/utils/IRandomGenerator';
+import { ICustomNodeFormatter } from '../../interfaces/custom-nodes/ICustomNodeFormatter';
 
 import { ObfuscationTarget } from '../../enums/ObfuscationTarget';
 import { StringArrayEncoding } from '../../enums/StringArrayEncoding';
@@ -50,18 +49,20 @@ export class StringArrayCallsWrapper extends AbstractCustomNode {
 
     /**
      * @param {TIdentifierNamesGeneratorFactory} identifierNamesGeneratorFactory
+     * @param {ICustomNodeFormatter} customNodeFormatter
      * @param {IRandomGenerator} randomGenerator
-     * @param {IEscapeSequenceEncoder} escapeSequenceEncoder
      * @param {IOptions} options
+     * @param {IEscapeSequenceEncoder} escapeSequenceEncoder
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__IIdentifierNamesGenerator)
             identifierNamesGeneratorFactory: TIdentifierNamesGeneratorFactory,
+        @inject(ServiceIdentifiers.ICustomNodeFormatter) customNodeFormatter: ICustomNodeFormatter,
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
-        @inject(ServiceIdentifiers.IEscapeSequenceEncoder) escapeSequenceEncoder: IEscapeSequenceEncoder,
-        @inject(ServiceIdentifiers.IOptions) options: IOptions
+        @inject(ServiceIdentifiers.IOptions) options: IOptions,
+        @inject(ServiceIdentifiers.IEscapeSequenceEncoder) escapeSequenceEncoder: IEscapeSequenceEncoder
     ) {
-        super(identifierNamesGeneratorFactory, randomGenerator, options);
+        super(identifierNamesGeneratorFactory, customNodeFormatter, randomGenerator, options);
 
         this.escapeSequenceEncoder = escapeSequenceEncoder;
     }
@@ -79,20 +80,21 @@ export class StringArrayCallsWrapper extends AbstractCustomNode {
     }
 
     /**
+     * @param {string} nodeTemplate
      * @returns {TStatement[]}
      */
-    protected getNodeStructure (): TStatement[] {
-        return NodeUtils.convertCodeToStructure(this.getTemplate());
+    protected getNodeStructure (nodeTemplate: string): TStatement[] {
+        return NodeUtils.convertCodeToStructure(nodeTemplate);
     }
 
     /**
      * @returns {string}
      */
-    protected getTemplate (): string {
+    protected getNodeTemplate (): string {
         const decodeNodeTemplate: string = this.getDecodeStringArrayTemplate();
 
         return JavaScriptObfuscator.obfuscate(
-            format(StringArrayCallsWrapperTemplate(), {
+            this.customNodeFormatter.formatTemplate(StringArrayCallsWrapperTemplate(), {
                 decodeNodeTemplate,
                 stringArrayCallsWrapperName: this.stringArrayCallsWrapperName,
                 stringArrayName: this.stringArrayName
@@ -100,7 +102,8 @@ export class StringArrayCallsWrapper extends AbstractCustomNode {
             {
                 ...NO_ADDITIONAL_NODES_PRESET,
                 identifierNamesGenerator: this.options.identifierNamesGenerator,
-                seed: this.options.seed
+                identifiersDictionary: this.options.identifiersDictionary,
+                seed: this.randomGenerator.getRawSeed()
             }
         ).getObfuscatedCode();
     }
@@ -112,13 +115,13 @@ export class StringArrayCallsWrapper extends AbstractCustomNode {
         const globalVariableTemplate: string = this.options.target !== ObfuscationTarget.BrowserNoEval
             ? this.getGlobalVariableTemplate()
             : GlobalVariableNoEvalTemplate();
-        const atobPolyfill: string = format(AtobTemplate(), { globalVariableTemplate });
+        const atobPolyfill: string = this.customNodeFormatter.formatTemplate(AtobTemplate(), { globalVariableTemplate });
 
         let decodeStringArrayTemplate: string = '';
         let selfDefendingCode: string = '';
 
         if (this.options.selfDefending) {
-            selfDefendingCode = format(
+            selfDefendingCode = this.customNodeFormatter.formatTemplate(
                 SelfDefendingTemplate(
                     this.randomGenerator,
                     this.escapeSequenceEncoder
@@ -132,7 +135,7 @@ export class StringArrayCallsWrapper extends AbstractCustomNode {
 
         switch (this.options.stringArrayEncoding) {
             case StringArrayEncoding.Rc4:
-                decodeStringArrayTemplate = format(
+                decodeStringArrayTemplate = this.customNodeFormatter.formatTemplate(
                     StringArrayRc4DecodeNodeTemplate(this.randomGenerator),
                     {
                         atobPolyfill,
@@ -145,7 +148,7 @@ export class StringArrayCallsWrapper extends AbstractCustomNode {
                 break;
 
             case StringArrayEncoding.Base64:
-                decodeStringArrayTemplate = format(
+                decodeStringArrayTemplate = this.customNodeFormatter.formatTemplate(
                     StringArrayBase64DecodeNodeTemplate(this.randomGenerator),
                     {
                         atobPolyfill,

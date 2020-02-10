@@ -3,10 +3,10 @@ import { ServiceIdentifiers } from '../../ServiceIdentifiers';
 
 import { TControlFlowStorage } from '../../../types/storages/TControlFlowStorage';
 import { TCustomNodeGroupStorage } from '../../../types/storages/TCustomNodeGroupStorage';
-import { TStringArrayStorage } from '../../../types/storages/TStringArrayStorage';
 
 import { IOptions } from '../../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../../interfaces/utils/IRandomGenerator';
+import { IStringArrayStorage } from '../../../interfaces/storages/string-array-storage/IStringArrayStorage';
 
 import { ControlFlowStorage } from '../../../storages/control-flow/ControlFlowStorage';
 import { CustomNodeGroupStorage } from '../../../storages/custom-node-group/CustomNodeGroupStorage';
@@ -18,7 +18,7 @@ export const storagesModule: interfaces.ContainerModule = new ContainerModule((b
         .to(CustomNodeGroupStorage)
         .inSingletonScope();
 
-    bind<TStringArrayStorage>(ServiceIdentifiers.TStringArrayStorage)
+    bind<IStringArrayStorage>(ServiceIdentifiers.IStringArrayStorage)
         .to(StringArrayStorage)
         .inSingletonScope();
 
@@ -28,7 +28,7 @@ export const storagesModule: interfaces.ContainerModule = new ContainerModule((b
     // controlFlowStorage factory
     bind<TControlFlowStorage>(ServiceIdentifiers.Factory__TControlFlowStorage)
         .toFactory<TControlFlowStorage>((context: interfaces.Context) => {
-            return () => {
+            return (): TControlFlowStorage => {
                 const constructor: interfaces.Newable<TControlFlowStorage> = context.container
                     .get<interfaces.Newable<TControlFlowStorage>>(ServiceIdentifiers.Newable__TControlFlowStorage);
                 const randomGenerator: IRandomGenerator = context.container

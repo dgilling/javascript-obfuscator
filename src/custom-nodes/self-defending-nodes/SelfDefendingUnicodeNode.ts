@@ -1,14 +1,13 @@
 import { inject, injectable, } from 'inversify';
 import { ServiceIdentifiers } from '../../container/ServiceIdentifiers';
 
-import format from 'string-template';
-
 import { TIdentifierNamesGeneratorFactory } from '../../types/container/generators/TIdentifierNamesGeneratorFactory';
 import { TStatement } from '../../types/node/TStatement';
 
 import { IEscapeSequenceEncoder } from '../../interfaces/utils/IEscapeSequenceEncoder';
 import { IOptions } from '../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../interfaces/utils/IRandomGenerator';
+import { ICustomNodeFormatter } from '../../interfaces/custom-nodes/ICustomNodeFormatter';
 
 import { initializable } from '../../decorators/Initializable';
 
@@ -35,18 +34,20 @@ export class SelfDefendingUnicodeNode extends AbstractCustomNode {
 
     /**
      * @param {TIdentifierNamesGeneratorFactory} identifierNamesGeneratorFactory
+     * @param {ICustomNodeFormatter} customNodeFormatter
      * @param {IRandomGenerator} randomGenerator
-     * @param {IEscapeSequenceEncoder} escapeSequenceEncoder
      * @param {IOptions} options
+     * @param {IEscapeSequenceEncoder} escapeSequenceEncoder
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__IIdentifierNamesGenerator)
             identifierNamesGeneratorFactory: TIdentifierNamesGeneratorFactory,
+        @inject(ServiceIdentifiers.ICustomNodeFormatter) customNodeFormatter: ICustomNodeFormatter,
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
-        @inject(ServiceIdentifiers.IEscapeSequenceEncoder) escapeSequenceEncoder: IEscapeSequenceEncoder,
-        @inject(ServiceIdentifiers.IOptions) options: IOptions
+        @inject(ServiceIdentifiers.IOptions) options: IOptions,
+        @inject(ServiceIdentifiers.IEscapeSequenceEncoder) escapeSequenceEncoder: IEscapeSequenceEncoder
     ) {
-        super(identifierNamesGeneratorFactory, randomGenerator, options);
+        super(identifierNamesGeneratorFactory, customNodeFormatter, randomGenerator, options);
 
         this.escapeSequenceEncoder = escapeSequenceEncoder;
     }
@@ -59,24 +60,26 @@ export class SelfDefendingUnicodeNode extends AbstractCustomNode {
     }
 
     /**
+     * @param {string} nodeTemplate
      * @returns {TStatement[]}
      */
-    protected getNodeStructure (): TStatement[] {
-        return NodeUtils.convertCodeToStructure(this.getTemplate());
+    protected getNodeStructure (nodeTemplate: string): TStatement[] {
+        return NodeUtils.convertCodeToStructure(nodeTemplate);
     }
 
     /**
      * @returns {string}
      */
-    protected getTemplate (): string {
+    protected getNodeTemplate (): string {
         return JavaScriptObfuscator.obfuscate(
-            format(SelfDefendingTemplate(this.escapeSequenceEncoder), {
+            this.customNodeFormatter.formatTemplate(SelfDefendingTemplate(this.escapeSequenceEncoder), {
                 selfDefendingFunctionName: this.identifierNamesGenerator.generate(),
                 singleNodeCallControllerFunctionName: this.callsControllerFunctionName
             }),
             {
                 ...NO_ADDITIONAL_NODES_PRESET,
                 identifierNamesGenerator: this.options.identifierNamesGenerator,
+                identifiersDictionary: this.options.identifiersDictionary,
                 seed: this.options.seed,
                 unicodeEscapeSequence: true
             }

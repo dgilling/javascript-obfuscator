@@ -1,12 +1,13 @@
 import { inject, injectable, } from 'inversify';
 import { ServiceIdentifiers } from './container/ServiceIdentifiers';
 
-import * as escodegen from 'escodegen-wallaby';
-import * as espree from 'espree';
+import * as acorn from 'acorn';
+import * as escodegen from 'escodegen';
 import * as ESTree from 'estree';
 
 import { TObfuscatedCodeFactory } from './types/container/source-code/TObfuscatedCodeFactory';
 
+import { IASTParserFacadeInputData } from './interfaces/IASTParserFacadeInputData';
 import { IGeneratorOutput } from './interfaces/IGeneratorOutput';
 import { IJavaScriptObfuscator } from './interfaces/IJavaScriptObfsucator';
 import { ILogger } from './interfaces/logger/ILogger';
@@ -19,7 +20,9 @@ import { LoggingMessage } from './enums/logger/LoggingMessage';
 import { NodeTransformer } from './enums/node-transformers/NodeTransformer';
 import { TransformationStage } from './enums/node-transformers/TransformationStage';
 
-import { EspreeFacade } from './EspreeFacade';
+import { ecmaVersion } from './constants/EcmaVersion';
+
+import { ASTParserFacade } from './ASTParserFacade';
 import { NodeGuards } from './node/NodeGuards';
 
 @injectable()
@@ -27,15 +30,13 @@ export class JavaScriptObfuscator implements IJavaScriptObfuscator {
     /**
      * @type {Options}
      */
-    private static readonly espreeParseOptions: espree.ParseOptions = {
-        attachComment: true,
-        comment: true,
-        ecmaFeatures: {
-            experimentalObjectRestSpread: true
-        },
-        ecmaVersion: 9,
-        loc: true,
-        range: true
+    private static readonly parseOptions: acorn.Options = {
+        ecmaVersion,
+        allowHashBang: true,
+        allowImportExportEverywhere: true,
+        allowReturnOutsideFunction: true,
+        locations: true,
+        ranges: true
     };
 
     /**
@@ -52,16 +53,11 @@ export class JavaScriptObfuscator implements IJavaScriptObfuscator {
      */
     private static readonly transformersList: NodeTransformer[] = [
         NodeTransformer.BlockStatementControlFlowTransformer,
-        NodeTransformer.ClassDeclarationTransformer,
         NodeTransformer.CommentsTransformer,
         NodeTransformer.CustomNodesTransformer,
         NodeTransformer.DeadCodeInjectionTransformer,
         NodeTransformer.EvalCallExpressionTransformer,
         NodeTransformer.FunctionControlFlowTransformer,
-        NodeTransformer.CatchClauseTransformer,
-        NodeTransformer.FunctionDeclarationTransformer,
-        NodeTransformer.FunctionTransformer,
-        NodeTransformer.ImportDeclarationTransformer,
         NodeTransformer.LabeledStatementTransformer,
         NodeTransformer.LiteralTransformer,
         NodeTransformer.MemberExpressionTransformer,
@@ -71,8 +67,9 @@ export class JavaScriptObfuscator implements IJavaScriptObfuscator {
         NodeTransformer.ObjectExpressionKeysTransformer,
         NodeTransformer.ObjectExpressionTransformer,
         NodeTransformer.ParentificationTransformer,
+        NodeTransformer.ScopeIdentifiersTransformer,
+        NodeTransformer.SplitStringTransformer,
         NodeTransformer.TemplateLiteralTransformer,
-        NodeTransformer.VariableDeclarationTransformer,
         NodeTransformer.VariablePreserveTransformer
     ];
 
@@ -108,7 +105,7 @@ export class JavaScriptObfuscator implements IJavaScriptObfuscator {
      * @param {ILogger} logger
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.ITransformersRunner) transformersRunner: ITransformersRunner,
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
         @inject(ServiceIdentifiers.Factory__IObfuscatedCode) obfuscatedCodeFactory: TObfuscatedCodeFactory,
@@ -130,7 +127,7 @@ export class JavaScriptObfuscator implements IJavaScriptObfuscator {
         const timeStart: number = Date.now();
         this.logger.info(LoggingMessage.Version, process.env.VERSION);
         this.logger.info(LoggingMessage.ObfuscationStarted);
-        this.logger.info(LoggingMessage.RandomGeneratorSeed, this.randomGenerator.getSeed());
+        this.logger.info(LoggingMessage.RandomGeneratorSeed, this.randomGenerator.getInputSeed());
 
         // parse AST tree
         const astTree: ESTree.Program = this.parseCode(sourceCode);
@@ -152,7 +149,12 @@ export class JavaScriptObfuscator implements IJavaScriptObfuscator {
      * @returns {Program}
      */
     private parseCode (sourceCode: string): ESTree.Program {
-        return EspreeFacade.parse(sourceCode, JavaScriptObfuscator.espreeParseOptions);
+        const inputData: IASTParserFacadeInputData = {
+            sourceCode,
+            inputFilePath: this.options.inputFilePath
+        };
+
+        return ASTParserFacade.parse(inputData, JavaScriptObfuscator.parseOptions);
     }
 
     /**
@@ -160,6 +162,8 @@ export class JavaScriptObfuscator implements IJavaScriptObfuscator {
      * @returns {Program}
      */
     private transformAstTree (astTree: ESTree.Program): ESTree.Program {
+        astTree = this.runTransformationStage(astTree, TransformationStage.Initializing);
+
         const isEmptyAstTree: boolean = NodeGuards.isProgramNode(astTree)
             && !astTree.body.length
             && !astTree.leadingComments

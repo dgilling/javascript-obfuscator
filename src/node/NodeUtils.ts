@@ -1,8 +1,10 @@
-import * as escodegen from 'escodegen-wallaby';
-import * as espree from 'espree';
+import * as escodegen from 'escodegen';
 import * as estraverse from 'estraverse';
 import * as ESTree from 'estree';
 
+import { ecmaVersion } from '../constants/EcmaVersion';
+
+import { ASTParserFacade } from '../ASTParserFacade';
 import { NodeGuards } from './NodeGuards';
 import { NodeMetadata } from './NodeMetadata';
 
@@ -33,7 +35,13 @@ export class NodeUtils {
      * @returns {Statement[]}
      */
     public static convertCodeToStructure (code: string): ESTree.Statement[] {
-        const structure: ESTree.Program = espree.parse(code, { sourceType: 'script' });
+        const structure: ESTree.Program = ASTParserFacade.parse(
+            { sourceCode: code },
+            {
+                ecmaVersion,
+                sourceType: 'script'
+            }
+        );
 
         estraverse.replace(structure, {
             enter: (node: ESTree.Node, parentNode: ESTree.Node | null): ESTree.Node => {
@@ -94,7 +102,7 @@ export class NodeUtils {
      * @returns {T}
      */
     public static parentizeNode <T extends ESTree.Node = ESTree.Node> (node: T, parentNode: ESTree.Node | null): T {
-        node.parentNode = parentNode || node;
+        node.parentNode = parentNode ?? node;
 
         return node;
     }

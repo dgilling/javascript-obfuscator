@@ -8,6 +8,7 @@ import { TStatement } from '../../types/node/TStatement';
 
 import { IOptions } from '../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../interfaces/utils/IRandomGenerator';
+import { ICustomNodeFormatter } from '../../interfaces/custom-nodes/ICustomNodeFormatter';
 
 import { initializable } from '../../decorators/Initializable';
 
@@ -38,16 +39,18 @@ export class BlockStatementControlFlowFlatteningNode extends AbstractCustomNode 
 
     /**
      * @param {TIdentifierNamesGeneratorFactory} identifierNamesGeneratorFactory
+     * @param {ICustomNodeFormatter} customNodeFormatter
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__IIdentifierNamesGenerator)
             identifierNamesGeneratorFactory: TIdentifierNamesGeneratorFactory,
+        @inject(ServiceIdentifiers.ICustomNodeFormatter) customNodeFormatter: ICustomNodeFormatter,
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
         @inject(ServiceIdentifiers.IOptions) options: IOptions
     ) {
-        super(identifierNamesGeneratorFactory, randomGenerator, options);
+        super(identifierNamesGeneratorFactory, customNodeFormatter, randomGenerator, options);
     }
 
     /**
@@ -66,32 +69,41 @@ export class BlockStatementControlFlowFlatteningNode extends AbstractCustomNode 
     }
 
     /**
+     * @param {string} nodeTemplate
      * @returns {TStatement[]}
      */
-    protected getNodeStructure (): TStatement[] {
+    protected getNodeStructure (nodeTemplate: string): TStatement[] {
         const controllerIdentifierName: string = this.randomGenerator.getRandomString(6);
         const indexIdentifierName: string = this.randomGenerator.getRandomString(6);
         const structure: ESTree.BlockStatement = NodeFactory.blockStatementNode([
-            NodeFactory.variableDeclarationNode([
-                NodeFactory.variableDeclaratorNode(
-                    NodeFactory.identifierNode(controllerIdentifierName),
-                    NodeFactory.callExpressionNode(
-                        NodeFactory.memberExpressionNode(
-                            NodeFactory.literalNode(
-                                this.originalKeysIndexesInShuffledArray.join('|')
+            NodeFactory.variableDeclarationNode(
+                [
+                    NodeFactory.variableDeclaratorNode(
+                        NodeFactory.identifierNode(controllerIdentifierName),
+                        NodeFactory.callExpressionNode(
+                            NodeFactory.memberExpressionNode(
+                                NodeFactory.literalNode(
+                                    this.originalKeysIndexesInShuffledArray.join('|')
+                                ),
+                                NodeFactory.identifierNode('split')
                             ),
-                            NodeFactory.identifierNode('split')
-                        ),
-                        [
-                            NodeFactory.literalNode('|')
-                        ]
+                            [
+                                NodeFactory.literalNode('|')
+                            ]
+                        )
                     )
-                ),
-                NodeFactory.variableDeclaratorNode(
-                    NodeFactory.identifierNode(indexIdentifierName),
-                    NodeFactory.literalNode(0)
-                )
-            ]),
+                ],
+                'const'
+            ),
+            NodeFactory.variableDeclarationNode(
+                [
+                    NodeFactory.variableDeclaratorNode(
+                        NodeFactory.identifierNode(indexIdentifierName),
+                        NodeFactory.literalNode(0)
+                    )
+                ],
+                'let'
+            ),
             NodeFactory.whileStatementNode(
                 NodeFactory.literalNode(true),
                 NodeFactory.blockStatementNode([

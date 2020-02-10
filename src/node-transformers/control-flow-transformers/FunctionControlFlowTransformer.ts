@@ -8,6 +8,7 @@ import { TControlFlowCustomNodeFactory } from '../../types/container/custom-node
 import { TControlFlowReplacerFactory } from '../../types/container/node-transformers/TControlFlowReplacerFactory';
 import { TControlFlowStorage } from '../../types/storages/TControlFlowStorage';
 import { TControlFlowStorageFactory } from '../../types/container/node-transformers/TControlFlowStorageFactory';
+import { TInitialData } from '../../types/TInitialData';
 import { TNodeWithStatements } from '../../types/node/TNodeWithStatements';
 
 import { ICustomNode } from '../../interfaces/custom-nodes/ICustomNode';
@@ -21,10 +22,12 @@ import { NodeType } from '../../enums/node/NodeType';
 import { TransformationStage } from '../../enums/node-transformers/TransformationStage';
 
 import { AbstractNodeTransformer } from '../AbstractNodeTransformer';
+import { ControlFlowStorageNode } from '../../custom-nodes/control-flow-flattening-nodes/control-flow-storage-nodes/ControlFlowStorageNode';
 import { NodeAppender } from '../../node/NodeAppender';
 import { NodeGuards } from '../../node/NodeGuards';
 import { NodeMetadata } from '../../node/NodeMetadata';
 import { NodeStatementUtils } from '../../node/NodeStatementUtils';
+import { NodeUtils } from '../../node/NodeUtils';
 
 @injectable()
 export class FunctionControlFlowTransformer extends AbstractNodeTransformer {
@@ -85,7 +88,7 @@ export class FunctionControlFlowTransformer extends AbstractNodeTransformer {
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
      */
-    constructor (
+    public constructor (
         @inject(ServiceIdentifiers.Factory__TControlFlowStorage)
             controlFlowStorageFactory: TControlFlowStorageFactory,
         @inject(ServiceIdentifiers.Factory__IControlFlowReplacer)
@@ -110,7 +113,7 @@ export class FunctionControlFlowTransformer extends AbstractNodeTransformer {
         switch (transformationStage) {
             case TransformationStage.ControlFlowFlattening:
                 return {
-                    leave: (node: ESTree.Node, parentNode: ESTree.Node | null) => {
+                    leave: (node: ESTree.Node, parentNode: ESTree.Node | null): ESTree.Node | undefined => {
                         if (
                             parentNode && (
                                 NodeGuards.isFunctionDeclarationNode(node) ||
@@ -150,13 +153,14 @@ export class FunctionControlFlowTransformer extends AbstractNodeTransformer {
             return functionNode;
         }
 
-        const controlFlowStorageCustomNode: ICustomNode = this.controlFlowCustomNodeFactory(
-            ControlFlowCustomNode.ControlFlowStorageNode
-        );
+        const controlFlowStorageCustomNode: ICustomNode<TInitialData<ControlFlowStorageNode>> =
+            this.controlFlowCustomNodeFactory(ControlFlowCustomNode.ControlFlowStorageNode);
 
         controlFlowStorageCustomNode.initialize(controlFlowStorage);
         NodeAppender.prepend(hostNode, controlFlowStorageCustomNode.getNode());
         this.hostNodesWithControlFlowNode.add(hostNode);
+
+        NodeUtils.parentizeAst(functionNode);
 
         return functionNode;
     }

@@ -3,14 +3,14 @@
  */
 export function ConsoleOutputDisableExpressionTemplate (): string {
     return `
-        var {consoleLogDisableFunctionName} = {singleNodeCallControllerFunctionName}(this, function () {
-            var func = function () {};
+        const {consoleLogDisableFunctionName} = {singleNodeCallControllerFunctionName}(this, function () {
+            const func = function () {};
             
             {globalVariableTemplate}
                         
             if (!that.console) {
                 that.console = (function (func){
-                    var c = {};
+                    const c = {};
                     
                     c.log = func;
                     c.warn = func;
@@ -18,6 +18,7 @@ export function ConsoleOutputDisableExpressionTemplate (): string {
                     c.info = func;
                     c.error = func;
                     c.exception = func;
+                    c.table = func;
                     c.trace = func;
                     
                     return c;
@@ -29,6 +30,7 @@ export function ConsoleOutputDisableExpressionTemplate (): string {
                 that.console.info = func;
                 that.console.error = func;
                 that.console.exception = func;
+                that.console.table = func;
                 that.console.trace = func;
             }
         });
