@@ -26,7 +26,7 @@ module.exports = {
         ],
         "@typescript-eslint/await-thenable": "error",
         "@typescript-eslint/ban-ts-comment": "error",
-        "@typescript-eslint/ban-types": "error",
+        "@typescript-eslint/ban-types": "off",
         "@typescript-eslint/brace-style": [
             "error",
             "1tbs",
@@ -35,7 +35,6 @@ module.exports = {
             }
         ],
         "@typescript-eslint/camelcase": "off",
-        "@typescript-eslint/class-name-casing": "error",
         "@typescript-eslint/comma-spacing": "error",
         "@typescript-eslint/consistent-type-assertions": [
             "error",
@@ -58,10 +57,6 @@ module.exports = {
             "off",
             4
         ],
-        "@typescript-eslint/interface-name-prefix": [
-            "error",
-            "always"
-        ],
         "@typescript-eslint/member-delimiter-style": [
             "error",
             {
@@ -76,6 +71,51 @@ module.exports = {
             }
         ],
         "@typescript-eslint/member-ordering": "error",
+        "@typescript-eslint/naming-convention": [
+            "error",
+            {
+                "selector": "default",
+                "format": ["camelCase", "PascalCase"]
+            },
+            {
+                "selector": "variable",
+                "format": ["camelCase", "PascalCase", "UPPER_CASE"]
+            },
+            {
+                "selector": "function",
+                "format": ["camelCase", "PascalCase"]
+            },
+            {
+                "selector": "class",
+                "format": ["PascalCase"]
+            },
+            {
+                "selector": "interface",
+                "format": ["PascalCase"],
+                "prefix": ["I"]
+            },
+            {
+                "selector": "typeAlias",
+                "format": ["PascalCase"],
+                "prefix": ["T"]
+            },
+            {
+                "selector": "typeParameter",
+                "format": ["PascalCase"]
+            },
+            {
+                "selector": "enum",
+                "format": ["PascalCase"]
+            },
+            {
+                "selector": "enumMember",
+                "format": null
+            },
+            {
+                "selector": "property",
+                "format": ["camelCase", "PascalCase", "snake_case"]
+            }
+        ],
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-empty-interface": "error",
         "@typescript-eslint/no-explicit-any": "off",
@@ -149,11 +189,18 @@ module.exports = {
         "guard-for-in": "error",
         "id-blacklist": "off",
         "id-match": "off",
+        "import/export": "error",
+        "import/first": "error",
+        "import/newline-after-import": "error",
+        "import/no-absolute-path": "error",
+        "import/no-cycle": "error",
         "import/no-default-export": "error",
         "import/no-deprecated": "error",
         "import/no-extraneous-dependencies": "error",
         "import/no-internal-modules": "error",
+        "import/no-mutable-exports": "error",
         "import/no-unassigned-import": "off",
+        "import/no-useless-path-segments": "error",
         "import/order": "off",
         "indent": "off",
         "jsdoc/no-types": "off",

@@ -20,15 +20,17 @@ export interface IOptions {
     readonly identifiersDictionary: string[];
     readonly identifiersPrefix: string;
     readonly inputFileName: string;
-    readonly inputFilePath: string;
     readonly log: boolean;
+    readonly numbersToExpressions: boolean;
     readonly renameGlobals: boolean;
+    readonly renameProperties: boolean;
     readonly reservedNames: string[];
     readonly reservedStrings: string[];
     readonly rotateStringArray: boolean;
     readonly seed: string | number;
     readonly selfDefending: boolean;
     readonly shuffleStringArray: boolean;
+    readonly simplify: boolean;
     readonly sourceMap: boolean;
     readonly sourceMapBaseUrl: string;
     readonly sourceMapFileName: string;

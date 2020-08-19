@@ -2,7 +2,27 @@ export class Utils {
     /**
      * @type {string}
      */
+    public static readonly baseMultipleSourcesIdentifiersPrefix: string = 'a';
+
+    /**
+     * @type {string}
+     */
     public static readonly hexadecimalPrefix: string = '0x';
+
+    /**
+     * @param {string} version
+     * @param {string} buildTimestamp
+     * @returns {string}
+     */
+    public static buildVersionMessage (version?: string, buildTimestamp?: string): string {
+        if (!version || !buildTimestamp) {
+            return 'unknown';
+        }
+
+        const buildDate: string = new Date(parseInt(buildTimestamp, 10)).toISOString();
+
+        return `${version}_${buildDate}`;
+    }
 
     /**
      * @param {string} url
@@ -20,5 +40,21 @@ export class Utils {
         domain = domain.split(':')[0];
 
         return domain;
+    }
+
+    /**
+     * @param {string | undefined} identifiersPrefix
+     * @param {number} sourceCodeIndex
+     * @returns {string}
+     */
+    public static getIdentifiersPrefixForMultipleSources (
+        identifiersPrefix: string | undefined,
+        sourceCodeIndex: number
+    ): string {
+        const baseIdentifiersPrefix: string = !!identifiersPrefix
+            ? identifiersPrefix
+            : Utils.baseMultipleSourcesIdentifiersPrefix;
+
+        return `${baseIdentifiersPrefix}${sourceCodeIndex}`;
     }
 }

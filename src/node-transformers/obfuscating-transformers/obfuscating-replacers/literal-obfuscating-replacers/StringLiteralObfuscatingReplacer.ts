@@ -9,15 +9,12 @@ import { IStringArrayStorage } from '../../../../interfaces/storages/string-arra
 import { IStringArrayStorageAnalyzer } from '../../../../interfaces/analyzers/string-array-storage-analyzer/IStringArrayStorageAnalyzer';
 import { IStringArrayStorageItemData } from '../../../../interfaces/storages/string-array-storage/IStringArrayStorageItem';
 
-import { initializable } from '../../../../decorators/Initializable';
-
 import { StringArrayEncoding } from '../../../../enums/StringArrayEncoding';
 
 import { AbstractObfuscatingReplacer } from '../AbstractObfuscatingReplacer';
 import { NodeMetadata } from '../../../../node/NodeMetadata';
 import { NodeFactory } from '../../../../node/NodeFactory';
 import { NumberUtils } from '../../../../utils/NumberUtils';
-import { Utils } from '../../../../utils/Utils';
 
 @injectable()
 export class StringLiteralObfuscatingReplacer extends AbstractObfuscatingReplacer implements IInitializable {
@@ -35,12 +32,6 @@ export class StringLiteralObfuscatingReplacer extends AbstractObfuscatingReplace
      * @type {IStringArrayStorageAnalyzer}
      */
     private readonly stringArrayStorageAnalyzer: IStringArrayStorageAnalyzer;
-
-    /**
-     * @type {string}
-     */
-    @initializable()
-    private stringArrayStorageCallsWrapperName!: string;
 
     /**
      * @param {IStringArrayStorage} stringArrayStorage
@@ -84,8 +75,6 @@ export class StringLiteralObfuscatingReplacer extends AbstractObfuscatingReplace
 
     @postConstruct()
     public initialize (): void {
-        this.stringArrayStorageCallsWrapperName = this.stringArrayStorage.getStorageCallsWrapperName();
-
         if (this.options.shuffleStringArray) {
             this.stringArrayStorage.shuffleStorage();
         }
@@ -139,7 +128,7 @@ export class StringLiteralObfuscatingReplacer extends AbstractObfuscatingReplace
     private replaceWithStringArrayCallNode (stringArrayStorageItemData: IStringArrayStorageItemData): ESTree.Node {
         const { index, decodeKey } = stringArrayStorageItemData;
 
-        const hexadecimalIndex: string = `${Utils.hexadecimalPrefix}${NumberUtils.toHex(index)}`;
+        const hexadecimalIndex: string = NumberUtils.toHex(index);
         const callExpressionArgs: (ESTree.Expression | ESTree.SpreadElement)[] = [
             StringLiteralObfuscatingReplacer.getHexadecimalLiteralNode(hexadecimalIndex)
         ];
@@ -148,7 +137,9 @@ export class StringLiteralObfuscatingReplacer extends AbstractObfuscatingReplace
             callExpressionArgs.push(StringLiteralObfuscatingReplacer.getRc4KeyLiteralNode(decodeKey));
         }
 
-        const stringArrayIdentifierNode: ESTree.Identifier = NodeFactory.identifierNode(this.stringArrayStorageCallsWrapperName);
+        const stringArrayIdentifierNode: ESTree.Identifier = NodeFactory.identifierNode(
+            this.stringArrayStorage.getStorageCallsWrapperName()
+        );
 
         return NodeFactory.callExpressionNode(
             stringArrayIdentifierNode,

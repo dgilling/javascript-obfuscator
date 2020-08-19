@@ -184,7 +184,7 @@ describe('JavaScriptObfuscatorCLI', function (): void {
                 const outputFileName1: string = 'foo-obfuscated.js';
                 const outputFileName2: string = 'bar-obfuscated.js';
                 const outputFileName3: string = 'baz-obfuscated.js';
-                const readFileEncoding: string = 'utf8';
+                const readFileEncoding = 'utf8';
                 const regExp1: RegExp = /^var a1_0x(\w){4,6} *= *0x1;$/;
                 const regExp2: RegExp = /^var a0_0x(\w){4,6} *= *0x2;$/;
 
@@ -249,7 +249,7 @@ describe('JavaScriptObfuscatorCLI', function (): void {
                 const identifiersPrefix: string = 'foo';
                 const outputFileName1: string = 'foo-obfuscated.js';
                 const outputFileName2: string = 'bar-obfuscated.js';
-                const readFileEncoding: string = 'utf8';
+                const readFileEncoding = 'utf8';
                 const regExp1: RegExp = /^var foo1_0x(\w){4,6} *= *0x1;$/;
                 const regExp2: RegExp = /^var foo0_0x(\w){4,6} *= *0x2;$/;
 
@@ -371,7 +371,7 @@ describe('JavaScriptObfuscatorCLI', function (): void {
                     const outputFileName1: string = 'foo-obfuscated.js';
                     const outputFileName2: string = 'bar-obfuscated.js';
                     const outputFileName3: string = 'baz-obfuscated.js';
-                    const readFileEncoding: string = 'utf8';
+                    const readFileEncoding = 'utf8';
                     const regExp1: RegExp = /^var a1_0x(\w){4,6} *= *0x1;$/;
                     const regExp2: RegExp = /^var a0_0x(\w){4,6} *= *0x2;$/;
 
@@ -438,7 +438,7 @@ describe('JavaScriptObfuscatorCLI', function (): void {
                     const outputFileName1: string = 'foo-obfuscated.js';
                     const outputFileName2: string = 'bar-obfuscated.js';
                     const outputFileName3: string = 'baz-obfuscated.js';
-                    const readFileEncoding: string = 'utf8';
+                    const readFileEncoding = 'utf8';
                     const regExp1: RegExp = /^var a0_0x(\w){4,6} *= *0x2;$/;
 
                     let outputFixturesFilePath1: string,
@@ -713,14 +713,59 @@ describe('JavaScriptObfuscatorCLI', function (): void {
 
         describe('help output', () => {
             let callback: sinon.SinonSpy<any, void>,
-                stdoutWriteMock: StdoutWriteMock;
+                stdoutWriteMock: StdoutWriteMock,
+                stubExit: sinon.SinonStub;
 
             beforeEach(() => {
+                stubExit = sinon.stub(process, 'exit');
                 callback = sinon.spy(console, 'log');
                 stdoutWriteMock = new StdoutWriteMock(process.stdout.write);
             });
 
-            describe('`--help` option is set', () => {
+            describe('`--help` option is set without any additional parameters', () => {
+                let isConsoleLogCalled: boolean;
+
+                beforeEach(() => {
+                    stdoutWriteMock.mute();
+
+                    JavaScriptObfuscatorCLI.obfuscate([
+                        'node',
+                        'javascript-obfuscator',
+                        '--help'
+                    ]);
+
+                    stdoutWriteMock.restore();
+                    isConsoleLogCalled = callback.called;
+                });
+
+                it('should print `console.log` help', () => {
+                    assert.equal(isConsoleLogCalled, true);
+                });
+            });
+
+            describe('`--help` option is set before file path', () => {
+                let isConsoleLogCalled: boolean;
+
+                beforeEach(() => {
+                    stdoutWriteMock.mute();
+
+                    JavaScriptObfuscatorCLI.obfuscate([
+                        'node',
+                        'javascript-obfuscator',
+                        '--help',
+                        fixtureFilePath
+                    ]);
+
+                    stdoutWriteMock.restore();
+                    isConsoleLogCalled = callback.called;
+                });
+
+                it('should print `console.log` help', () => {
+                    assert.equal(isConsoleLogCalled, true);
+                });
+            });
+
+            describe('`--help` option is set after file path', () => {
                 let isConsoleLogCalled: boolean;
 
                 beforeEach(() => {
@@ -763,56 +808,99 @@ describe('JavaScriptObfuscatorCLI', function (): void {
             });
 
             afterEach(() => {
+                stubExit.restore();
                 callback.restore();
             });
         });
 
         describe('`--config` option is set', () => {
-            const outputSourceMapPath: string = `${outputFilePath}.map`;
+            describe('Base options', () => {
+                const outputSourceMapPath: string = `${outputFilePath}.map`;
 
-            let isFileExist: boolean,
-                sourceMapObject: any;
+                let isFileExist: boolean,
+                    sourceMapObject: any;
 
-            before(() => {
-                JavaScriptObfuscatorCLI.obfuscate([
-                    'node',
-                    'javascript-obfuscator',
-                    fixtureFilePath,
-                    '--output',
-                    outputFilePath,
-                    '--config',
-                    configFilePath
-                ]);
+                before(() => {
+                    JavaScriptObfuscatorCLI.obfuscate([
+                        'node',
+                        'javascript-obfuscator',
+                        fixtureFilePath,
+                        '--output',
+                        outputFilePath,
+                        '--config',
+                        configFilePath
+                    ]);
 
-                try {
-                    const content: string = fs.readFileSync(outputSourceMapPath, {encoding: 'utf8'});
+                    try {
+                        const content: string = fs.readFileSync(outputSourceMapPath, {encoding: 'utf8'});
 
-                    isFileExist = true;
-                    sourceMapObject = JSON.parse(content);
-                } catch (e) {
-                    isFileExist = false;
-                }
+                        isFileExist = true;
+                        sourceMapObject = JSON.parse(content);
+                    } catch (e) {
+                        isFileExist = false;
+                    }
+                });
+
+                it('should create file with source map in the same directory as output file', () => {
+                    assert.equal(isFileExist, true);
+                });
+
+                it('source map from created file should contains property `version`', () => {
+                    assert.property(sourceMapObject, 'version');
+                });
+
+                it('source map from created file should contains property `sources`', () => {
+                    assert.property(sourceMapObject, 'sources');
+                });
+
+                it('source map from created file should contains property `names`', () => {
+                    assert.property(sourceMapObject, 'names');
+                });
+
+                after(() => {
+                    fs.unlinkSync(outputFilePath);
+                    fs.unlinkSync(outputSourceMapPath);
+                });
             });
 
-            it('should create file with source map in the same directory as output file', () => {
-                assert.equal(isFileExist, true);
-            });
+            describe('`--exclude` option', () => {
+                const directoryPath: string = `${fixturesDirName}/directory-obfuscation`;
+                const outputFileName1: string = 'foo-obfuscated.js';
+                const outputFileName2: string = 'bar-obfuscated.js';
 
-            it('source map from created file should contains property `version`', () => {
-                assert.property(sourceMapObject, 'version');
-            });
+                let outputFixturesFilePath1: string,
+                    outputFixturesFilePath2: string,
+                    isFileExist1: boolean,
+                    isFileExist2: boolean;
 
-            it('source map from created file should contains property `sources`', () => {
-                assert.property(sourceMapObject, 'sources');
-            });
+                before(() => {
+                    outputFixturesFilePath1 = `${directoryPath}/${outputFileName1}`;
+                    outputFixturesFilePath2 = `${directoryPath}/${outputFileName2}`;
 
-            it('source map from created file should contains property `names`', () => {
-                assert.property(sourceMapObject, 'names');
-            });
+                    JavaScriptObfuscatorCLI.obfuscate([
+                        'node',
+                        'javascript-obfuscator',
+                        directoryPath,
+                        '--config',
+                        configFilePath
+                    ]);
 
-            after(() => {
-                fs.unlinkSync(outputFilePath);
-                fs.unlinkSync(outputSourceMapPath);
+                    isFileExist1 = fs.existsSync(outputFixturesFilePath1);
+                    isFileExist2 = fs.existsSync(outputFixturesFilePath2);
+                });
+
+                it(`shouldn't create file \`${outputFileName1}\` in \`${fixturesDirName}\` directory`, () => {
+                    assert.equal(isFileExist1, false);
+                });
+
+                it(`should create file \`${outputFileName2}\` with obfuscated code in \`${fixturesDirName}\` directory`, () => {
+                    assert.equal(isFileExist2, true);
+                });
+
+                after(() => {
+                    rimraf.sync(outputFixturesFilePath1);
+                    rimraf.sync(outputFixturesFilePath2);
+                });
             });
         });
 
@@ -849,6 +937,94 @@ describe('JavaScriptObfuscatorCLI', function (): void {
 
             after(() => {
                 fs.unlinkSync(outputFilePath);
+            });
+        });
+
+        describe('Logging', () => {
+            describe('Obfuscating file message', () => {
+                const directoryPath: string = `${fixturesDirName}/directory-obfuscation`;
+
+                const inputFileName1: string = 'foo.js';
+                const inputFileName2: string = 'bar.js';
+                const inputFilePath1: string = `${directoryPath}/${inputFileName1}`;
+                const inputFilePath2: string = `${directoryPath}/${inputFileName2}`;
+
+                const outputFileName1: string = 'foo-obfuscated.js';
+                const outputFileName2: string = 'bar-obfuscated.js';
+                const outputFilePath1: string = `${directoryPath}/${outputFileName1}`;
+                const outputFilePath2: string = `${directoryPath}/${outputFileName2}`;
+
+                const expectedLoggingMessage1: string = `[javascript-obfuscator-cli] Obfuscating file: ${inputFilePath1}...`;
+                const expectedLoggingMessage2: string = `[javascript-obfuscator-cli] Obfuscating file: ${inputFilePath2}...`;
+
+                let consoleLogSpy: sinon.SinonSpy<any, void>,
+                    loggingMessageResult1: string,
+                    loggingMessageResult2: string;
+
+                before(() => {
+                    consoleLogSpy = sinon.spy(console, 'log');
+
+                    JavaScriptObfuscatorCLI.obfuscate([
+                        'node',
+                        'javascript-obfuscator',
+                        directoryPath,
+                        '--rename-globals',
+                        'true'
+                    ]);
+
+                    loggingMessageResult1 = consoleLogSpy.getCall(1).args[0];
+                    loggingMessageResult2 = consoleLogSpy.getCall(0).args[0];
+                });
+
+                it('Variant #1: should log file name to the console', () => {
+                    assert.include(loggingMessageResult1, expectedLoggingMessage1);
+                });
+
+                it('Variant #2: should log file name to the console', () => {
+                    assert.include(loggingMessageResult2, expectedLoggingMessage2);
+                });
+
+                after(() => {
+                    rimraf.sync(outputFilePath1);
+                    rimraf.sync(outputFilePath2);
+                    consoleLogSpy.restore();
+                });
+            });
+
+            describe('Error message', () => {
+                const directoryPath: string = `${fixturesDirName}/directory-obfuscation-error`;
+
+                const inputFileName: string = 'foo.js';
+                const inputFilePath: string = `${directoryPath}/${inputFileName}`;
+
+                const expectedLoggingMessage1: string = `[javascript-obfuscator-cli] Error in file: ${inputFilePath}...`;
+
+                let consoleLogSpy: sinon.SinonSpy<any, void>,
+                    loggingMessageResult: string
+
+                before(() => {
+                    consoleLogSpy = sinon.spy(console, 'log');
+
+                    try {
+                        JavaScriptObfuscatorCLI.obfuscate([
+                            'node',
+                            'javascript-obfuscator',
+                            directoryPath,
+                            '--rename-globals',
+                            'true'
+                        ]);
+                    } catch {}
+
+                    loggingMessageResult = consoleLogSpy.getCall(1).args[0];
+                });
+
+                it('Should log file name to the console', () => {
+                    assert.include(loggingMessageResult, expectedLoggingMessage1);
+                });
+
+                after(() => {
+                    consoleLogSpy.restore();
+                });
             });
         });
 

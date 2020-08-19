@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import * as escodegen from 'escodegen';
 import * as ESTree from 'estree';
 
@@ -115,6 +116,26 @@ export class NodeFactory {
     }
 
     /**
+     * @param {ESTree.Expression} test
+     * @param {ESTree.Expression} consequent
+     * @param {ESTree.Expression} alternate
+     * @returns {ESTree.ConditionalExpression}
+     */
+    public static conditionalExpressionNode (
+        test: ESTree.Expression,
+        consequent: ESTree.Expression,
+        alternate: ESTree.Expression
+    ): ESTree.ConditionalExpression {
+        return {
+            type: NodeType.ConditionalExpression,
+            test,
+            consequent,
+            alternate,
+            metadata: { ignoredNode: false }
+        };
+    }
+
+    /**
      * @param {Identifier} label
      * @returns {ContinueStatement}
      */
@@ -139,6 +160,37 @@ export class NodeFactory {
             type: NodeType.ExpressionStatement,
             expression,
             directive,
+            metadata: { ignoredNode: false }
+        };
+    }
+
+    /**
+     * @param {Literal} source
+     * @returns {ExportAllDeclaration}
+     */
+    public static exportAllDeclarationNode (
+        source: ESTree.Literal
+    ): ESTree.ExportAllDeclaration {
+        return {
+            type: NodeType.ExportAllDeclaration,
+            source,
+            metadata: { ignoredNode: false }
+        };
+    }
+
+    /**
+     * @param {ExportSpecifier[]} specifiers
+     * @param {Literal} source
+     * @returns {ExportNamedDeclaration}
+     */
+    public static exportNamedDeclarationNode (
+        specifiers: ESTree.ExportSpecifier[],
+        source: ESTree.Literal
+    ): ESTree.ExportNamedDeclaration {
+        return {
+            type: NodeType.ExportNamedDeclaration,
+            specifiers,
+            source,
             metadata: { ignoredNode: false }
         };
     }
@@ -195,15 +247,15 @@ export class NodeFactory {
     }
 
     /**
-     * @param {Expression} test
-     * @param {BlockStatement} consequent
-     * @param {BlockStatement} alternate
-     * @returns {IfStatement}
+     * @param {ESTree.Expression} test
+     * @param {ESTree.Statement} consequent
+     * @param {ESTree.Statement | null} alternate
+     * @returns {ESTree.IfStatement}
      */
     public static ifStatementNode (
         test: ESTree.Expression,
-        consequent: ESTree.BlockStatement,
-        alternate?: ESTree.BlockStatement
+        consequent: ESTree.Statement,
+        alternate?: ESTree.Statement | null
     ): ESTree.IfStatement {
         return {
             type: NodeType.IfStatement,
@@ -304,34 +356,10 @@ export class NodeFactory {
     }
 
     /**
-     * @param {Expression} key
-     * @param {FunctionExpression} value
-     * @param {"constructor" | "method" | "get" | "set"} kind
-     * @param {boolean} computed
-     * @returns {MethodDefinition}
+     * @param {(ESTree.Property | ESTree.SpreadElement)[]} properties
+     * @returns {ESTree.ObjectExpression}
      */
-    public static methodDefinitionNode (
-        key: ESTree.Expression,
-        value: ESTree.FunctionExpression,
-        kind: 'constructor' | 'method' | 'get' | 'set',
-        computed: boolean,
-    ): ESTree.MethodDefinition {
-        return {
-            type: NodeType.MethodDefinition,
-            key,
-            value,
-            kind,
-            computed,
-            static: false,
-            metadata: { ignoredNode: false }
-        };
-    }
-
-    /**
-     * @param {Property[]} properties
-     * @returns {ObjectExpression}
-     */
-    public static objectExpressionNode (properties: ESTree.Property[]): ESTree.ObjectExpression {
+    public static objectExpressionNode (properties: (ESTree.Property | ESTree.SpreadElement)[]): ESTree.ObjectExpression {
         return {
             type: NodeType.ObjectExpression,
             properties,
@@ -370,6 +398,18 @@ export class NodeFactory {
         return {
             type: NodeType.ReturnStatement,
             argument,
+            metadata: { ignoredNode: false }
+        };
+    }
+
+    /**
+     * @param {ESTree.Expression[]} expressions
+     * @returns {ESTree.SequenceExpression}
+     */
+    public static sequenceExpressionNode (expressions: ESTree.Expression[]): ESTree.SequenceExpression {
+        return {
+            type: NodeType.SequenceExpression,
+            expressions,
             metadata: { ignoredNode: false }
         };
     }
@@ -436,6 +476,40 @@ export class NodeFactory {
             operator,
             argument: argumentExpr,
             prefix: false,
+            metadata: { ignoredNode: false }
+        };
+    }
+
+    /**
+     * @param {ESTree.TemplateElement["value"]} value
+     * @param {boolean} tail
+     * @returns {ESTree.TemplateElement}
+     */
+    public static templateElement (
+        value: ESTree.TemplateElement['value'],
+        tail: boolean
+    ): ESTree.TemplateElement {
+        return {
+            type: NodeType.TemplateElement,
+            value,
+            tail,
+            metadata: { ignoredNode: false }
+        };
+    }
+
+    /**
+     * @param {ESTree.Expression[]} expressions
+     * @param {ESTree.TemplateElement[]} quasis
+     * @returns {ESTree.TemplateLiteral}
+     */
+    public static templateLiteral (
+        expressions: ESTree.Expression[],
+        quasis: ESTree.TemplateElement[]
+    ): ESTree.TemplateLiteral {
+        return {
+            type: NodeType.TemplateLiteral,
+            expressions,
+            quasis,
             metadata: { ignoredNode: false }
         };
     }

@@ -7,7 +7,7 @@ import { IOptions } from '../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../interfaces/utils/IRandomGenerator';
 import { IVisitor } from '../../interfaces/node-transformers/IVisitor';
 
-import { TransformationStage } from '../../enums/node-transformers/TransformationStage';
+import { NodeTransformationStage } from '../../enums/node-transformers/NodeTransformationStage';
 
 import { AbstractNodeTransformer } from '../AbstractNodeTransformer';
 import { NodeFactory } from '../../node/NodeFactory';
@@ -40,24 +40,15 @@ export class TemplateLiteralTransformer extends AbstractNodeTransformer {
     }
 
     /**
-     * @param {Node} node
-     * @param {Node | null} parentNode
-     * @returns {boolean}
-     */
-    private static isValidTemplateLiteralNode (node: ESTree.Node, parentNode: ESTree.Node): node is ESTree.TemplateLiteral {
-        return NodeGuards.isTemplateLiteralNode(node) && !NodeGuards.isTaggedTemplateExpressionNode(parentNode);
-    }
-
-    /**
-     * @param {TransformationStage} transformationStage
+     * @param {NodeTransformationStage} nodeTransformationStage
      * @returns {IVisitor | null}
      */
-    public getVisitor (transformationStage: TransformationStage): IVisitor | null {
-        switch (transformationStage) {
-            case TransformationStage.Converting:
+    public getVisitor (nodeTransformationStage: NodeTransformationStage): IVisitor | null {
+        switch (nodeTransformationStage) {
+            case NodeTransformationStage.Converting:
                 return {
                     enter: (node: ESTree.Node, parentNode: ESTree.Node | null): ESTree.Node | undefined => {
-                        if (parentNode && TemplateLiteralTransformer.isValidTemplateLiteralNode(node, parentNode)) {
+                        if (parentNode && NodeGuards.isTemplateLiteralNode(node)) {
                             return this.transformNode(node, parentNode);
                         }
                     }
@@ -69,11 +60,24 @@ export class TemplateLiteralTransformer extends AbstractNodeTransformer {
     }
 
     /**
-     * @param {TemplateLiteral} templateLiteralNode
-     * @param {NodeGuards} parentNode
-     * @returns {NodeGuards}
+     * @param {ESTree.TemplateLiteral} templateLiteralNode
+     * @param {ESTree.Node} parentNode
+     * @returns {ESTree.Node}
      */
     public transformNode (templateLiteralNode: ESTree.TemplateLiteral, parentNode: ESTree.Node): ESTree.Node {
+        if (NodeGuards.isTaggedTemplateExpressionNode(parentNode)) {
+            return templateLiteralNode;
+        }
+
+        return this.transformTemplateLiteralNode(templateLiteralNode, parentNode);
+    }
+
+    /**
+     * @param {ESTree.TemplateLiteral} templateLiteralNode
+     * @param {ESTree.Node} parentNode
+     * @returns {ESTree.Expression}
+     */
+    private transformTemplateLiteralNode (templateLiteralNode: ESTree.TemplateLiteral, parentNode: ESTree.Node): ESTree.Expression {
         const templateLiteralExpressions: ESTree.Expression[] = templateLiteralNode.expressions;
 
         let nodes: ESTree.Expression[] = [];

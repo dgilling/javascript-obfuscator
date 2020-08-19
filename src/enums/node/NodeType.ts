@@ -10,9 +10,11 @@ export enum NodeType {
     BreakStatement = 'BreakStatement',
     CallExpression = 'CallExpression',
     CatchClause = 'CatchClause',
+    ChainExpression = 'ChainExpression',
     ClassDeclaration = 'ClassDeclaration',
     ConditionalExpression = 'ConditionalExpression',
     ContinueStatement = 'ContinueStatement',
+    ExportAllDeclaration = 'ExportAllDeclaration',
     ExportNamedDeclaration = 'ExportNamedDeclaration',
     ExpressionStatement = 'ExpressionStatement',
     ForStatement = 'ForStatement',
@@ -42,11 +44,14 @@ export enum NodeType {
     SwitchCase = 'SwitchCase',
     SwitchStatement = 'SwitchStatement',
     TaggedTemplateExpression = 'TaggedTemplateExpression',
+    TemplateElement = 'TemplateElement',
     TemplateLiteral = 'TemplateLiteral',
+    ThrowStatement = 'ThrowStatement',
     TryStatement = 'TryStatement',
     UnaryExpression = 'UnaryExpression',
     UpdateExpression = 'UpdateExpression',
     VariableDeclaration = 'VariableDeclaration',
     VariableDeclarator = 'VariableDeclarator',
-    WhileStatement = 'WhileStatement'
+    WhileStatement = 'WhileStatement',
+    YieldExpression = 'YieldExpression'
 }

@@ -10,7 +10,15 @@
 
 JavaScript Obfuscator is a powerful free obfuscator for JavaScript, containing a variety of features which provide protection for your source code.
 
-Example of obfuscated code: [gist.github.com](https://gist.github.com/sanex3339/ffc2876123b52e6d11ce45369fd53acf)
+**Key features:**
+- variables renaming
+- strings extraction and encryption
+- dead code injection
+- control flow flattening
+- various code transformations
+- and [more](#javascript-obfuscator-options)...
+
+The example of obfuscated code: [github.com](https://github.com/javascript-obfuscator/javascript-obfuscator/blob/master/examples/javascript-obfuscator.js)
 
 #### Online version:
 [obfuscator.io](https://obfuscator.io)
@@ -24,19 +32,19 @@ Example of obfuscated code: [gist.github.com](https://gist.github.com/sanex3339/
 * Weex: [weex-devtool](https://www.npmjs.com/package/weex-devtool)
 * Malta: [malta-js-obfuscator](https://github.com/fedeghe/malta-js-obfuscator)
 
-[![Join the chat at Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/javascript-obfuscator/General-chat)
 [![npm version](https://badge.fury.io/js/javascript-obfuscator.svg)](https://badge.fury.io/js/javascript-obfuscator)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjavascript-obfuscator%2Fjavascript-obfuscator.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjavascript-obfuscator%2Fjavascript-obfuscator?ref=badge_shield)
 [![Build Status](https://travis-ci.com/javascript-obfuscator/javascript-obfuscator.svg?branch=master)](https://travis-ci.com/javascript-obfuscator/javascript-obfuscator)
 [![Coverage Status](https://coveralls.io/repos/github/javascript-obfuscator/javascript-obfuscator/badge.svg?branch=master)](https://coveralls.io/github/javascript-obfuscator/javascript-obfuscator?branch=master)
 [![Backers on Open Collective](https://opencollective.com/javascript-obfuscator/backers/badge.svg)](#backers) 
 [![Sponsors on Open Collective](https://opencollective.com/javascript-obfuscator/sponsors/badge.svg)](#sponsors)
+[![xscode](https://img.shields.io/badge/Available%20on-xs%3Acode-blue?style=?style=plastic&logo=appveyor&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRF////////VXz1bAAAAAJ0Uk5T/wDltzBKAAAAlUlEQVR42uzXSwqAMAwE0Mn9L+3Ggtgkk35QwcnSJo9S+yGwM9DCooCbgn4YrJ4CIPUcQF7/XSBbx2TEz4sAZ2q1RAECBAiYBlCtvwN+KiYAlG7UDGj59MViT9hOwEqAhYCtAsUZvL6I6W8c2wcbd+LIWSCHSTeSAAECngN4xxIDSK9f4B9t377Wd7H5Nt7/Xz8eAgwAvesLRjYYPuUAAAAASUVORK5CYII=)](https://xscode.com/sanex3339/javascript-obfuscator)
 
 #### You can support this project by donating:
-* (Bitcoin) 14yhtZxLNp6ekZAgmEmPJqEKUP2VtUxQK6
-* (Ether) 0x5Df9eBcFB2D0f3315d03Ac112104b9023C409dc1
 * (OpenCollective) https://opencollective.com/javascript-obfuscator
+* PayPal credit card [https://www.paypal.com/donate](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=javascript-obfuscator@yandex.ru&lc=US&no_note=0&item_name=Support+javascript-obfuscator&cn=&curency_code=USD&bn=PP-DonationsBF:btn_donateCC_LG.gif:NonHosted)
 * PayPal https://www.paypal.me/javascriptobfuscator
+* (Bitcoin) 14yhtZxLNp6ekZAgmEmPJqEKUP2VtUxQK6
 
 Huge thanks to all supporters!
 
@@ -99,85 +107,92 @@ var obfuscationResult = JavaScriptObfuscator.obfuscate(
     `,
     {
         compact: false,
-        controlFlowFlattening: true
+        controlFlowFlattening: true,
+        numbersToExpressions: true,
+        simplify: true,
+        shuffleStringArray: true,
+        splitStrings: true
     }
 );
 
 console.log(obfuscationResult.getObfuscatedCode());
 /*
-var _0x2218 = [
-    '8|3|1|2|0|4|6|9|7|5',
-    'bqndd',
-    'dySIh',
-    'kTiiG',
+var _0x2302 = [
+    'oAFaE',
+    'foo\x20',
+    'RDjIM',
+    'ZhYJQ',
+    'split',
+    'vWUAR',
+    'YIYCI',
+    'map',
     'log',
-    'tuvgv'
+    '8|7|0|2|9|'
 ];
-(function (_0x38b423, _0x1d6bd4) {
-    var _0x39a849 = function (_0x5794c7) {
-        while (--_0x5794c7) {
-            _0x38b423['push'](_0x38b423['shift']());
+(function (_0x27f028, _0xd47344) {
+    var _0x335bc0 = function (_0x29965a) {
+        while (--_0x29965a) {
+            _0x27f028['push'](_0x27f028['shift']());
         }
     };
-    _0x39a849(++_0x1d6bd4);
-}(_0x2218, 0x114));
-var _0x8221 = function (_0xcac13e, _0x3627d7) {
-    _0xcac13e = _0xcac13e - 0x0;
-    var _0x1eae4d = _0x2218[_0xcac13e];
-    return _0x1eae4d;
+    _0x335bc0(++_0xd47344);
+}(_0x2302, 0xaee + -0x1 * 0xa63 + -0x7 * -0x1f));
+var _0x2384 = function (_0x27f028, _0xd47344) {
+    _0x27f028 = _0x27f028 - (0xaee + -0x1 * 0xa63 + -0x1 * 0x8b);
+    var _0x335bc0 = _0x2302[_0x27f028];
+    return _0x335bc0;
 };
 (function () {
-    var _0x5336d5 = {
-        'bqndd': _0x8221('0x0'),
-        'islRd': function _0x2abb6c(_0x2f45f8, _0x4d47b0) {
-            return _0x2f45f8 + _0x4d47b0;
-        },
-        'kTiiG': function _0x32525a(_0x44ba8d, _0x2c5e0c) {
-            return _0x44ba8d + _0x2c5e0c;
-        },
-        'dySIh': 'foo\x20',
-        'tuvgv': function _0x28d015(_0x35d81a, _0x2d2463) {
-            return _0x35d81a - _0x2d2463;
-        }
-    };
-    var _0x5000ba = _0x5336d5[_0x8221('0x1')]['split']('|'), _0x5c972f = 0x0;
+    var _0x38ee09 = {
+            'RDjIM': _0x2384('0x3') + '5|4|6|1|3',
+            'ZhYJQ': function (_0x257a32, _0x35b48d) {
+                return _0x257a32 + _0x35b48d;
+            },
+            'oAFaE': function (_0x1c49a8, _0x53ffa5) {
+                return _0x1c49a8 - _0x53ffa5;
+            },
+            'vWUAR': function (_0x2c7ad4, _0x33512e) {
+                return _0x2c7ad4 + _0x33512e;
+            },
+            'YIYCI': _0x2384('0x5')
+        }, _0x147d16 = _0x38ee09[_0x2384('0x6')][_0x2384('0x8')]('|'), _0x28f080 = -0x239b + -0x49 * 0x65 + 0x4068;
     while (!![]) {
-        switch (_0x5000ba[_0x5c972f++]) {
+        switch (_0x147d16[_0x28f080++]) {
         case '0':
-            var _0x586faa = _0x5336d5['islRd'](_0x5336d5['kTiiG'](_0x5336d5[_0x8221('0x2')], 0x1), 0x1);
+            var _0x263e6c = _0x38ee09[_0x2384('0x7')]('5', -'2');
             continue;
         case '1':
-            var _0xab6a82 = _0x5336d5[_0x8221('0x3')]('5', -'2');
+            console[_0x2384('0x2')](_0x225580);
             continue;
         case '2':
-            var _0x19ab9d = [
+            var _0x225580 = [
                 '10',
                 '10',
                 '10',
                 '10',
                 '10'
-            ]['map'](parseInt);
+            ][_0x2384('0x1')](parseInt);
             continue;
         case '3':
-            var _0x321653 = _0x5336d5[_0x8221('0x3')]('5', 0x3);
+            console[_0x2384('0x2')](_0x1a047b);
             continue;
         case '4':
-            console['log'](_0x2c1b0c);
+            console[_0x2384('0x2')](_0x382090);
             continue;
         case '5':
-            console[_0x8221('0x4')](_0x586faa);
+            console[_0x2384('0x2')](_0x450071);
             continue;
         case '6':
-            console[_0x8221('0x4')](_0x321653);
+            console['log'](_0x263e6c);
             continue;
         case '7':
-            console[_0x8221('0x4')](_0x19ab9d);
+            var _0x382090 = _0x38ee09['ZhYJQ']('5', -0x2093 + 0x103 + 0x1 * 0x1f93);
             continue;
         case '8':
-            var _0x2c1b0c = _0x5336d5[_0x8221('0x5')]('5', 0x3);
+            var _0x450071 = _0x38ee09[_0x2384('0x4')]('5', 0x377 + 0x1b9 * 0x9 + -0x1 * 0x12f5);
             continue;
         case '9':
-            console[_0x8221('0x4')](_0xab6a82);
+            var _0x1a047b = _0x38ee09[_0x2384('0x9')](_0x38ee09[_0x2384('0x0')] + (-0xbf6 + -0x24a * 0x2 + 0x23 * 0x79), 0x1 * 0xb68 + 0x6bd + 0x81 * -0x24);
             continue;
         }
         break;
@@ -202,6 +217,18 @@ Method takes two parameters, `sourceCode` and `options` – the source code and 
 
 For available options, see [options](#options).
 
+### `obfuscateMultiple(sourceCodesObject, options)`
+
+Accepts `sourceCodesObject` that is a map which keys are identifiers of source codes and values are source codes:
+```
+{
+    foo: 'var foo = 1;',
+    bar: 'var bar = 2;'
+}
+```
+
+Returns a map object which keys are identifiers of source codes and values are `ObfuscationResult` objects.
+
 ## CLI usage
 
 See [CLI options](#cli-options).
@@ -212,6 +239,8 @@ Usage:
 ```sh
 javascript-obfuscator input_file_name.js [options]
 javascript-obfuscator input_file_name.js --output output_file_name.js [options]
+javascript-obfuscator input_file_name.js --output output_folder_name [options]
+javascript-obfuscator input_folder_name --output output_folder_name [options]
 ```
 
 Obfuscation of single input file with `.js` extension.
@@ -268,6 +297,13 @@ For example:
 
 Kind of variables of inserted nodes will auto-detected, based on most prevailing kind of variables of source code.
 
+## Conflicts of identifier names between different files
+
+During obfuscation of the different files, the same names can be generated for the global identifiers between these files.
+To prevent this set the unique prefix for all global identifiers for each obfuscated file with [`identifiersPrefix`](#identifiersPrefix) option. 
+
+When using CLI this prefix will be added automatically.
+
 ## Antiviruses false positive virus alerts
 
 Some input source code that will obfuscated with some obfuscation options can trigger false positive alerts in a few antiviruses. If you will get this false positive triggers, try to play with obfuscation options.
@@ -301,13 +337,16 @@ Following options are available for the JS Obfuscator:
     identifiersPrefix: '',
     inputFileName: '',
     log: false,
+    numbersToExpressions: false,
     renameGlobals: false,
+    renameProperties: false,
     reservedNames: [],
     reservedStrings: [],
     rotateStringArray: true,
     seed: 0,
     selfDefending: false,
     shuffleStringArray: true,
+    simplify: true,
     sourceMap: false,
     sourceMapBaseUrl: '',
     sourceMapFileName: '',
@@ -341,17 +380,20 @@ Following options are available for the JS Obfuscator:
     --disable-console-output <boolean>
     --domain-lock '<list>' (comma separated)
     --exclude '<list>' (comma separated)
-    --identifier-names-generator <string> [dictionary, hexadecimal, mangled]
+    --identifier-names-generator <string> [dictionary, hexadecimal, mangled, mangled-shuffled]
     --identifiers-dictionary '<list>' (comma separated)
     --identifiers-prefix <string>
     --log <boolean>
+    --numbers-to-expressions <boolean>
     --rename-globals <boolean>
+    --rename-properties <boolean>
     --reserved-names '<list>' (comma separated)
     --reserved-strings '<list>' (comma separated)
     --rotate-string-array <boolean>
     --seed <string|number>
     --self-defending <boolean>
     --shuffle-string-array <boolean>
+    --simplify <boolean>
     --source-map <boolean>
     --source-map-base-url <string>
     --source-map-file-name <string>
@@ -570,10 +612,7 @@ Type: `boolean` Default: `false`
 
 ##### :warning: Can freeze your browser if you open the Developer Tools.
 
-This option makes it almost impossible to use the `console` tab of the Developer Tools (both on WebKit-based and Mozilla Firefox).
-
-* WebKit-based: blocks the site window, but you still can navigate through Developer Tools panel.
-* Firefox: does *not* block the site window, but still won't let you use DevTools.
+This option makes it almost impossible to use the `debugger` function of the Developer Tools (both on WebKit-based and Mozilla Firefox).
 
 ### `debugProtectionInterval`
 Type: `boolean` Default: `false`
@@ -592,10 +631,10 @@ Type: `string[]` Default: `[]`
 
 ##### :warning: This option does not work with `target: 'node'`
 
-Locks the obfuscated source code so it only runs on specific domains and/or sub-domains. This makes really hard for someone to just copy and paste your source code and run it elsewhere.
+Allows to run the obfuscated source code only on specific domains and/or sub-domains. This makes really hard for someone to just copy and paste your source code and run it elsewhere.
 
 ##### Multiple domains and sub-domains
-It's possible to lock your code to more than one domain or sub-domain. For instance, to lock it so the code only runs on **www.example.com** add `www.example.com`. To make it work on any sub-domain from example.com, use `.example.com`.
+It's possible to lock your code to more than one domain or sub-domain. For instance, to lock it so the code only runs on **www.example.com** add `www.example.com`. To make it work on the root domain including any sub-domains (`example.com`, `sub.example.com`), use `.example.com`.
 
 ### `exclude`
 Type: `string[]` Default: `[]`
@@ -611,6 +650,7 @@ Available values:
 * `dictionary`: identifier names from [`identifiersDictionary`](#identifiersDictionary) list
 * `hexadecimal`: identifier names like `_0xabc123`
 * `mangled`: short identifier names like `a`, `b`, `c`
+* `mangled-shuffled`: same as `mangled` but with shuffled alphabet
 
 ### `identifiersDictionary`
 Type: `string[]` Default: `[]`
@@ -627,12 +667,26 @@ Use this option when you want to obfuscate multiple files. This option helps to 
 ### `inputFileName`
 Type: `string` Default: `''`
 
-Allows to set name of the input file with source code. This name will used internally for source map generation.
+Allows to set name of the input file with source code. This name will be used internally for source map generation.
 
 ### `log`
 Type: `boolean` Default: `false`
 
 Enables logging of the information to the console.
+
+### `numbersToExpressions`
+Type: `boolean` Default: `false`
+
+Enables numbers conversion to expressions
+
+Example: 
+```ts
+// input
+const foo = 1234;
+
+// output
+const foo=-0xd93+-0x10b4+0x41*0x67+0x84e*0x3+-0xff8;
+```
 
 ### `renameGlobals`
 Type: `boolean` Default: `false`
@@ -640,6 +694,45 @@ Type: `boolean` Default: `false`
 ##### :warning: this option can break your code. Enable it only if you know what it does!
 
 Enables obfuscation of global variable and function names **with declaration**.
+
+### `renameProperties`
+Type: `boolean` Default: `false`
+
+##### :warning: this option **WILL** break your code in most cases. Enable it only if you know what it does!
+
+Enables renaming of property names. All built-in DOM properties and properties in core JavaScript classes will be ignored.
+
+To set format of renamed property names use [`identifierNamesGenerator`](#identifierNamesGenerator) option.
+
+To control which properties will be renamed use [`reservedNames`](#reservedNames) option.
+
+Example: 
+```ts
+// input
+(function () {
+    const foo = {
+        prop1: 1,
+        prop2: 2,
+        calc: function () {
+            return this.prop1 + this.prop2;
+        }
+    };
+    
+    console.log(foo.calc());
+})();
+
+// output
+(function () {
+    const _0x46529b = {
+        '_0x10cec7': 0x1,
+        '_0xc1c0ca': 0x2,
+        '_0x4b961d': function () {
+            return this['_0x10cec7'] + this['_0xc1c0ca'];
+        }
+    };
+    console['log'](_0x46529b['_0x4b961d']());
+}());
+```
 
 ### `reservedNames`
 Type: `string[]` Default: `[]`
@@ -702,6 +795,41 @@ Type: `boolean` Default: `true`
 ##### :warning: [`stringArray`](#stringarray) must be enabled
 
 Randomly shuffles the `stringArray` array items.
+
+### `simplify`
+Type: `boolean` Default: `true`
+
+Enables additional code obfuscation through simplification.
+
+##### :warning: in future releases obfuscation of `boolean` literals (`true` => `!![]`) will be moved under this option. 
+
+Example:
+```ts
+// input
+if (condition1) {
+    const foo = 1;
+    const bar = 2;
+  
+    console.log(foo);
+  
+    return bar;
+} else if (condition2) {
+    console.log(1);
+    console.log(2);
+    console.log(3);
+  
+    return 4;
+} else {
+    return 5;
+}
+
+// output
+if (condition1) {
+    const foo = 0x1, bar = 0x2;
+    return console['log'](foo), bar;
+} else
+    return condition2 ? (console['log'](0x1), console['log'](0x2), console['log'](0x3), 0x4) : 0x5;
+```
 
 ### `sourceMap`
 Type: `boolean` Default: `false`
@@ -878,12 +1006,14 @@ Performance will 50-100% slower than without obfuscation
     disableConsoleOutput: true,
     identifierNamesGenerator: 'hexadecimal',
     log: false,
+    numbersToExpressions: true,
     renameGlobals: false,
     rotateStringArray: true,
     selfDefending: true,
     shuffleStringArray: true,
+    simplify: true,
     splitStrings: true,
-    splitStringsChunkLength: '5',
+    splitStringsChunkLength: 5,
     stringArray: true,
     stringArrayEncoding: 'rc4',
     stringArrayThreshold: 1,
@@ -908,12 +1038,14 @@ Performance will 30-35% slower than without obfuscation
     disableConsoleOutput: true,
     identifierNamesGenerator: 'hexadecimal',
     log: false,
+    numbersToExpressions: false,
     renameGlobals: false,
     rotateStringArray: true,
     selfDefending: true,
     shuffleStringArray: true,
+    simplify: true,
     splitStrings: true,
-    splitStringsChunkLength: '10',
+    splitStringsChunkLength: 10,
     stringArray: true,
     stringArrayEncoding: 'base64',
     stringArrayThreshold: 0.75,
@@ -936,10 +1068,12 @@ Performance will slightly slower than without obfuscation
     disableConsoleOutput: true,
     identifierNamesGenerator: 'hexadecimal',
     log: false,
+    numbersToExpressions: false,
     renameGlobals: false,
     rotateStringArray: true,
     selfDefending: true,
     shuffleStringArray: true,
+    simplify: true,
     splitStrings: false,
     stringArray: true,
     stringArrayEncoding: false,
@@ -952,7 +1086,7 @@ Performance will slightly slower than without obfuscation
 
 ### What javascript versions are supported?
 
-`es3`, `es5`, `es2015`, `es2016` and `es2017`
+`es3`, `es5`, `es2015`, `es2016`, `es2017`, `es2018`, `es2019` and partially `es2020`
 
 ### I want to use feature that described in `README.md` but it's not working!
 
@@ -976,6 +1110,14 @@ No. JSX support isn't planned.
 ### How to change kind of variables of inserted nodes (`var`, `let` or `const`)?
 
 See: [`Kind of variables`](#kind-of-variables)
+
+### Why I got `null` value instead of `BigInt` number?
+
+`BigInt` obfuscation works correctly only in environments that support `BigInt` values. See [ESTree spec](https://github.com/estree/estree/blob/master/es2020.md#bigintliteral)
+
+### I enabled `renameProperties` option, and my code broke! What to do?
+
+Just disable this option.
 
 ## Backers
 

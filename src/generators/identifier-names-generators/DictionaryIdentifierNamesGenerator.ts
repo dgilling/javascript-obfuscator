@@ -6,6 +6,8 @@ import { IOptions } from '../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../interfaces/utils/IRandomGenerator';
 
 import { AbstractIdentifierNamesGenerator } from './AbstractIdentifierNamesGenerator';
+import { TNodeWithLexicalScope } from '../../types/node/TNodeWithLexicalScope';
+import { NodeLexicalScopeUtils } from '../../node/NodeLexicalScopeUtils';
 
 @injectable()
 export class DictionaryIdentifierNamesGenerator extends AbstractIdentifierNamesGenerator {
@@ -67,7 +69,57 @@ export class DictionaryIdentifierNamesGenerator extends AbstractIdentifierNamesG
         return null;
     }
 
-    public generate (): string {
+    public generateNext (): string {
+        const identifierName: string = this.generateNewDictionaryName();
+
+        this.preserveName(identifierName);
+
+        return identifierName;
+    }
+
+    /**
+     * @returns {string}
+     */
+    public generateForGlobalScope (): string {
+        const prefix: string = this.options.identifiersPrefix ?
+            `${this.options.identifiersPrefix}`
+            : '';
+        const identifierName: string = this.generateNewDictionaryName();
+        const identifierNameWithPrefix: string = `${prefix}${identifierName}`;
+
+        if (!this.isValidIdentifierName(identifierNameWithPrefix)) {
+            return this.generateForGlobalScope();
+        }
+
+        this.preserveName(identifierNameWithPrefix);
+
+        return identifierNameWithPrefix;
+    }
+
+    /**
+     * @param {TNodeWithLexicalScope} lexicalScopeNode
+     * @returns {string}
+     */
+    public generateForLexicalScope (lexicalScopeNode: TNodeWithLexicalScope): string {
+        const lexicalScopes: TNodeWithLexicalScope[] = [
+            lexicalScopeNode,
+            ...NodeLexicalScopeUtils.getLexicalScopes(lexicalScopeNode)
+        ];
+        const identifierName: string = this.generateNewDictionaryName();
+
+        if (!this.isValidIdentifierNameInLexicalScopes(identifierName, lexicalScopes)) {
+            return this.generateForLexicalScope(lexicalScopeNode);
+        }
+
+        this.preserveNameForLexicalScope(identifierName, lexicalScopeNode);
+
+        return identifierName;
+    }
+
+    /**
+     * @returns {string}
+     */
+    private generateNewDictionaryName (): string {
         if (!this.identifierNamesSet.size) {
             throw new Error('Too many identifiers in the code, add more words to identifiers dictionary');
         }
@@ -75,25 +127,19 @@ export class DictionaryIdentifierNamesGenerator extends AbstractIdentifierNamesG
         const iteratorResult: IteratorResult<string> = this.identifiersIterator.next();
 
         if (!iteratorResult.done) {
+            const identifierName: string =iteratorResult.value;
+
+            if (!this.isValidIdentifierName(identifierName)) {
+                return this.generateNewDictionaryName();
+            }
+
             return iteratorResult.value;
         }
 
         this.identifierNamesSet = new Set(this.getIncrementedIdentifierNames([...this.identifierNamesSet]));
         this.identifiersIterator = this.identifierNamesSet.values();
 
-        return this.generate();
-    }
-
-    /**
-     * @returns {string}
-     */
-    public generateWithPrefix (): string {
-        const prefix: string = this.options.identifiersPrefix ?
-            `${this.options.identifiersPrefix}_`
-            : '';
-        const identifierName: string = this.generate();
-
-        return `${prefix}${identifierName}`.replace('__', '_');
+        return this.generateNewDictionaryName();
     }
 
     /**

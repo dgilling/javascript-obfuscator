@@ -117,7 +117,8 @@ export class Options implements IOptions {
     @IsIn([
         IdentifierNamesGenerator.DictionaryIdentifierNamesGenerator,
         IdentifierNamesGenerator.HexadecimalIdentifierNamesGenerator,
-        IdentifierNamesGenerator.MangledIdentifierNamesGenerator
+        IdentifierNamesGenerator.MangledIdentifierNamesGenerator,
+        IdentifierNamesGenerator.MangledShuffledIdentifierNamesGenerator
     ])
     public readonly identifierNamesGenerator!: TypeFromEnum<typeof IdentifierNamesGenerator>;
 
@@ -145,12 +146,6 @@ export class Options implements IOptions {
     public readonly inputFileName!: string;
 
     /**
-     * @type {string}
-     */
-    @IsString()
-    public readonly inputFilePath!: string;
-
-    /**
      * @type {boolean}
      */
     @IsBoolean()
@@ -160,7 +155,19 @@ export class Options implements IOptions {
      * @type {boolean}
      */
     @IsBoolean()
+    public readonly numbersToExpressions!: boolean;
+
+    /**
+     * @type {boolean}
+     */
+    @IsBoolean()
     public readonly renameGlobals!: boolean;
+
+    /**
+     * @type {boolean}
+     */
+    @IsBoolean()
+    public readonly renameProperties!: boolean;
 
     /**
      * @type {string[]}
@@ -189,11 +196,6 @@ export class Options implements IOptions {
     public readonly rotateStringArray!: boolean;
 
     /**
-     * @type {string | number}
-     */
-    public readonly seed!: string | number;
-
-    /**
      * @type {boolean}
      */
     @IsBoolean()
@@ -204,6 +206,12 @@ export class Options implements IOptions {
      */
     @IsBoolean()
     public readonly shuffleStringArray!: boolean;
+
+    /**
+     * @type {boolean}
+     */
+    @IsBoolean()
+    public readonly simplify!: boolean;
 
     /**
      * @type {boolean}
@@ -286,6 +294,11 @@ export class Options implements IOptions {
      */
     @IsBoolean()
     public readonly unicodeEscapeSequence!: boolean;
+
+    /**
+     * @type {string | number}
+     */
+    public readonly seed!: string | number;
 
     /**
      * @param {TInputOptions} inputOptions

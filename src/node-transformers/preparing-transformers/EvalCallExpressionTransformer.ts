@@ -8,7 +8,8 @@ import { IOptions } from '../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../interfaces/utils/IRandomGenerator';
 import { IVisitor } from '../../interfaces/node-transformers/IVisitor';
 
-import { TransformationStage } from '../../enums/node-transformers/TransformationStage';
+import { NodeTransformer } from '../../enums/node-transformers/NodeTransformer';
+import { NodeTransformationStage } from '../../enums/node-transformers/NodeTransformationStage';
 
 import { AbstractNodeTransformer } from '../AbstractNodeTransformer';
 import { NodeFactory } from '../../node/NodeFactory';
@@ -17,6 +18,14 @@ import { NodeUtils } from '../../node/NodeUtils';
 
 @injectable()
 export class EvalCallExpressionTransformer extends AbstractNodeTransformer {
+    /**
+     * @type {NodeTransformer.ParentificationTransformer[]}
+     */
+    public readonly runAfter: NodeTransformer[] = [
+        NodeTransformer.ParentificationTransformer,
+        NodeTransformer.VariablePreserveTransformer
+    ];
+
     /**
      * @type {Set <FunctionExpression>}
      */
@@ -75,12 +84,12 @@ export class EvalCallExpressionTransformer extends AbstractNodeTransformer {
     }
 
     /**
-     * @param {TransformationStage} transformationStage
+     * @param {NodeTransformationStage} nodeTransformationStage
      * @returns {IVisitor | null}
      */
-    public getVisitor (transformationStage: TransformationStage): IVisitor | null {
-        switch (transformationStage) {
-            case TransformationStage.Preparing:
+    public getVisitor (nodeTransformationStage: NodeTransformationStage): IVisitor | null {
+        switch (nodeTransformationStage) {
+            case NodeTransformationStage.Preparing:
                 return {
                     enter: (node: ESTree.Node, parentNode: ESTree.Node | null): ESTree.Node | undefined => {
                         if (
@@ -94,7 +103,7 @@ export class EvalCallExpressionTransformer extends AbstractNodeTransformer {
                     }
                 };
 
-            case TransformationStage.Finalizing:
+            case NodeTransformationStage.Finalizing:
                 if (!this.evalRootAstHostNodeSet.size) {
                     return null;
                 }
@@ -146,6 +155,9 @@ export class EvalCallExpressionTransformer extends AbstractNodeTransformer {
          */
         const evalRootAstHostNode: ESTree.FunctionExpression = NodeFactory
             .functionExpressionNode([], NodeFactory.blockStatementNode(ast));
+
+        NodeUtils.parentizeAst(evalRootAstHostNode);
+        NodeUtils.parentizeNode(evalRootAstHostNode, parentNode);
 
         /**
          * we should store that host node and then extract AST-tree on the `finalizing` stage

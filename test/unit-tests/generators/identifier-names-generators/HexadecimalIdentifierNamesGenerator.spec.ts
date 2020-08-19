@@ -12,30 +12,55 @@ import { IdentifierNamesGenerator } from '../../../../src/enums/generators/ident
 import { InversifyContainerFacade } from '../../../../src/container/InversifyContainerFacade';
 
 describe('HexadecimalIdentifierNamesGenerator', () => {
-    describe('generate', () => {
-        let identifierNamesGenerator: IIdentifierNamesGenerator,
-            hexadecimalIdentifierName: string,
-            regExp: RegExp;
+    describe('generateNext', () => {
+        describe('Base', () => {
+            let identifierNamesGenerator: IIdentifierNamesGenerator,
+                hexadecimalIdentifierName: string,
+                regExp: RegExp;
 
-        before(() => {
-            const inversifyContainerFacade: IInversifyContainerFacade = new InversifyContainerFacade();
+            before(() => {
+                const inversifyContainerFacade: IInversifyContainerFacade = new InversifyContainerFacade();
 
-            inversifyContainerFacade.load('', '', {});
-            identifierNamesGenerator = inversifyContainerFacade.getNamed<IIdentifierNamesGenerator>(
-                ServiceIdentifiers.IIdentifierNamesGenerator,
-                IdentifierNamesGenerator.HexadecimalIdentifierNamesGenerator
-            );
+                inversifyContainerFacade.load('', '', {});
+                identifierNamesGenerator = inversifyContainerFacade.getNamed<IIdentifierNamesGenerator>(
+                    ServiceIdentifiers.IIdentifierNamesGenerator,
+                    IdentifierNamesGenerator.HexadecimalIdentifierNamesGenerator
+                );
 
-            hexadecimalIdentifierName = identifierNamesGenerator.generate();
-            regExp = /^_0x(\w){4,6}$/;
+                hexadecimalIdentifierName = identifierNamesGenerator.generateNext();
+                regExp = /^_0x(\w){4,6}$/;
+            });
+
+            it('should return hexadecimal name', () => {
+                assert.match(hexadecimalIdentifierName, regExp);
+            })
         });
 
-        it('should return hexadecimal name', () => {
-            assert.match(hexadecimalIdentifierName, regExp);
-        })
+        describe('Custom length', () => {
+            let identifierNamesGenerator: IIdentifierNamesGenerator,
+                hexadecimalIdentifierName: string,
+                regExp: RegExp;
+
+            before(() => {
+                const inversifyContainerFacade: IInversifyContainerFacade = new InversifyContainerFacade();
+
+                inversifyContainerFacade.load('', '', {});
+                identifierNamesGenerator = inversifyContainerFacade.getNamed<IIdentifierNamesGenerator>(
+                    ServiceIdentifiers.IIdentifierNamesGenerator,
+                    IdentifierNamesGenerator.HexadecimalIdentifierNamesGenerator
+                );
+
+                hexadecimalIdentifierName = identifierNamesGenerator.generateNext(3);
+                regExp = /^_0x(\w){3}$/;
+            });
+
+            it('should return hexadecimal name', () => {
+                assert.match(hexadecimalIdentifierName, regExp);
+            })
+        });
     });
 
-    describe('generateWithPrefix (): string', () => {
+    describe('generateForGlobalScope', () => {
         const regExp: RegExp = /^foo_0x(\w){4,6}$/;
 
         let identifierNamesGenerator: IIdentifierNamesGenerator,
@@ -52,7 +77,7 @@ describe('HexadecimalIdentifierNamesGenerator', () => {
                 IdentifierNamesGenerator.HexadecimalIdentifierNamesGenerator
             );
 
-            hexadecimalIdentifierName = identifierNamesGenerator.generateWithPrefix();
+            hexadecimalIdentifierName = identifierNamesGenerator.generateForGlobalScope();
         });
 
         it('should return hexadecimal name with prefix', () => {

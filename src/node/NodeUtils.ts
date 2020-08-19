@@ -10,8 +10,8 @@ import { NodeMetadata } from './NodeMetadata';
 
 export class NodeUtils {
     /**
-     * @param {T} literalNode
-     * @returns {T}
+     * @param {ESTree.Literal} literalNode
+     * @returns {ESTree.Literal}
      */
     public static addXVerbatimPropertyTo (literalNode: ESTree.Literal): ESTree.Literal {
         literalNode['x-verbatim-property'] = {
@@ -32,11 +32,11 @@ export class NodeUtils {
 
     /**
      * @param {string} code
-     * @returns {Statement[]}
+     * @returns {ESTree.Statement[]}
      */
     public static convertCodeToStructure (code: string): ESTree.Statement[] {
         const structure: ESTree.Program = ASTParserFacade.parse(
-            { sourceCode: code },
+            code,
             {
                 ecmaVersion,
                 sourceType: 'script'
@@ -89,9 +89,15 @@ export class NodeUtils {
      * @returns {T}
      */
     public static parentizeAst <T extends ESTree.Node = ESTree.Node> (astTree: T): T {
+        const parentNode: ESTree.Node | null = astTree.parentNode ?? null;
+
         estraverse.replace(astTree, {
             enter: NodeUtils.parentizeNode
         });
+
+        if (parentNode) {
+            astTree.parentNode = parentNode;
+        }
 
         return astTree;
     }

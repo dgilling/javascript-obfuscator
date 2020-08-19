@@ -2,6 +2,7 @@ import { assert } from 'chai';
 import { TypeFromEnum } from '@gradecam/tsenum';
 
 import { TInputOptions } from '../../../src/types/options/TInputOptions';
+import { TDictionary } from '../../../src/types/TDictionary';
 
 import { IObfuscatedCode } from '../../../src/interfaces/source-code/IObfuscatedCode';
 
@@ -46,39 +47,55 @@ describe('JavaScriptObfuscator', () => {
             });
         });
 
-        describe('empty source code', () => {
-            let obfuscatedCode: string;
+        describe('Empty or invalid source code', () => {
+            describe('empty source code', () => {
+                let obfuscatedCode: string;
 
-            beforeEach(() => {
-                const code: string = readFileAsString(__dirname + '/fixtures/empty-input.js');
+                beforeEach(() => {
+                    const code: string = readFileAsString(__dirname + '/fixtures/empty-input.js');
 
-                obfuscatedCode = JavaScriptObfuscator.obfuscate(
-                    code,
-                ).getObfuscatedCode();
+                    obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                        code,
+                    ).getObfuscatedCode();
+                });
+
+                it('should return an empty obfuscated code', () => {
+                    assert.isNotOk(obfuscatedCode);
+                });
             });
 
-            it('should return an empty obfuscated code', () => {
-                assert.isNotOk(obfuscatedCode);
+            describe('empty source code with comments', () => {
+                let obfuscatedCode: string;
+
+                beforeEach(() => {
+                    const code: string = readFileAsString(__dirname + '/fixtures/comments-only.js');
+
+                    obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                        code,
+                        {
+                            controlFlowFlattening: true,
+                            deadCodeInjection: true
+                        }
+                    ).getObfuscatedCode();
+                });
+
+                it('should return an empty obfuscated code', () => {
+                    assert.isNotOk(obfuscatedCode);
+                });
             });
-        });
 
-        describe('empty source code with comments', () => {
-            let obfuscatedCode: string;
+            describe('invalid source code type', () => {
+                let obfuscatedCode: string;
 
-            beforeEach(() => {
-                const code: string = readFileAsString(__dirname + '/fixtures/comments-only.js');
+                beforeEach(() => {
+                    obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                        1 as unknown as string
+                    ).getObfuscatedCode();
+                });
 
-                obfuscatedCode = JavaScriptObfuscator.obfuscate(
-                    code,
-                    {
-                        controlFlowFlattening: true,
-                        deadCodeInjection: true
-                    }
-                ).getObfuscatedCode();
-            });
-
-            it('should return an empty obfuscated code', () => {
-                assert.isNotOk(obfuscatedCode);
+                it('should return an empty obfuscated code', () => {
+                    assert.isNotOk(obfuscatedCode);
+                });
             });
         });
 
@@ -530,6 +547,54 @@ describe('JavaScriptObfuscator', () => {
             });
         });
 
+        /**
+         * https://github.com/estools/escodegen/pull/408
+         */
+        describe('`ObjectPattern` with single `RestElement`', () => {
+            const regExp: RegExp = /const {\.\.\.foo} *= *{};/;
+
+            let obfuscatedCode: string;
+
+            beforeEach(() => {
+                const code: string = readFileAsString(__dirname + '/fixtures/object-pattern-single-rest-element.js');
+
+                obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                    code,
+                    {
+                        ...NO_ADDITIONAL_NODES_PRESET
+                    }
+                ).getObfuscatedCode();
+            });
+
+            it('should not break on `ObjectPattern` with single `RestElement`', () => {
+                assert.match(obfuscatedCode, regExp);
+            });
+        });
+
+        /**
+         * https://github.com/estools/escodegen/pull/415
+         */
+        describe('Precedence of `SequenceExpression` in computed property', () => {
+            const regExp: RegExp = /class Foo *{ *\[\(bar, *baz\)]\(\) *{ *} * *}/;
+
+            let obfuscatedCode: string;
+
+            beforeEach(() => {
+                const code: string = readFileAsString(__dirname + '/fixtures/precedence-of-sequence-expression-in-computed-property.js');
+
+                obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                    code,
+                    {
+                        ...NO_ADDITIONAL_NODES_PRESET
+                    }
+                ).getObfuscatedCode();
+            });
+
+            it('should generate a valid js code', () => {
+                assert.match(obfuscatedCode, regExp);
+            });
+        });
+
         describe('new.target MetaProperty', () => {
             const regExp: RegExp = /new\.target *=== *Foo/;
 
@@ -596,6 +661,53 @@ describe('JavaScriptObfuscator', () => {
             });
         });
 
+        describe('BigInt support', () => {
+            const regExp: RegExp = /return 0x20000000000001n *\+ *0xan *\+ *0xan;/;
+
+            let obfuscatedCode: string;
+
+            beforeEach(() => {
+                const code: string = readFileAsString(__dirname + '/fixtures/bigint-support.js');
+
+                obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                    code,
+                    {
+                        ...NO_ADDITIONAL_NODES_PRESET
+                    }
+                ).getObfuscatedCode();
+            });
+
+            it('should support BigInt', () => {
+                assert.match(obfuscatedCode, regExp);
+            });
+        });
+
+        describe('Optional chaining support', () => {
+            const regExp: RegExp = new RegExp(
+                'const _0x(\\w){4,6} *= *{ *' +
+                    '\'bar\': *\\(\\) *=> *{} *' +
+                '}; *' +
+                '_0x(\\w){4,6}\\?\\.\\[\'bar\']\\?\\.\\(\\);'
+            );
+
+            let obfuscatedCode: string;
+
+            beforeEach(() => {
+                const code: string = readFileAsString(__dirname + '/fixtures/optional-chaining-support.js');
+
+                obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                    code,
+                    {
+                        ...NO_ADDITIONAL_NODES_PRESET
+                    }
+                ).getObfuscatedCode();
+            });
+
+            it('should support optional chaining', () => {
+                assert.match(obfuscatedCode, regExp);
+            });
+        });
+
         describe('mangled identifier names generator', () => {
             const regExp: RegExp = /var c *= *0x1/;
 
@@ -617,8 +729,30 @@ describe('JavaScriptObfuscator', () => {
             });
         });
 
+        describe('mangled shuffled identifier names generator', () => {
+            const regExp: RegExp = /var [a-zA-Z] *= *0x1/;
+
+            let obfuscatedCode: string;
+
+            beforeEach(() => {
+                const code: string = readFileAsString(__dirname + '/fixtures/mangle.js');
+
+                obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                    code,
+                    {
+                        identifierNamesGenerator: IdentifierNamesGenerator.MangledShuffledIdentifierNamesGenerator
+                    }
+                ).getObfuscatedCode();
+            });
+
+            it('should mangle obfuscated code', () => {
+                assert.match(obfuscatedCode, regExp);
+            });
+        });
+
         describe('dictionary identifier names generator', () => {
-            const regExp: RegExp = /var [abc] *= *0x1; *var [ABC] *= *0x2; *var [ABC] *= *0x3;/;
+            const regExp1: RegExp = /var [abc] *= *0x1; *var [abc] *= *0x2; *var [abc] *= *0x3;/;
+            const regExp2: RegExp = /var [ABC] *= *0x4; *var [ABC] *= *0x5; *var [ABC] *= *0x6;/;
 
             let obfuscatedCode: string;
 
@@ -635,8 +769,12 @@ describe('JavaScriptObfuscator', () => {
                 ).getObfuscatedCode();
             });
 
-            it('should generate identifier based on the dictionary', () => {
-                assert.match(obfuscatedCode, regExp);
+            it('Match #1: should generate identifier based on the dictionary', () => {
+                assert.match(obfuscatedCode, regExp1);
+            });
+
+            it('Match #2: should generate identifier based on the dictionary', () => {
+                assert.match(obfuscatedCode, regExp2);
             });
         });
 
@@ -698,6 +836,9 @@ describe('JavaScriptObfuscator', () => {
                         deadCodeInjection: true,
                         deadCodeInjectionThreshold: 1,
                         disableConsoleOutput: false,
+                        numbersToExpressions: true,
+                        simplify: true,
+                        renameProperties: true,
                         rotateStringArray: true,
                         stringArray: true,
                         stringArrayEncoding: StringArrayEncoding.Rc4,
@@ -726,16 +867,20 @@ describe('JavaScriptObfuscator', () => {
             before(() => {
                 const code: string = readFileAsString(__dirname + '/fixtures/custom-nodes-identifier-names-collision.js');
 
-                obfuscateFunc = (identifierNamesGenerator: TypeFromEnum<typeof IdentifierNamesGenerator>) => JavaScriptObfuscator.obfuscate(
-                    code,
-                    {
-                        identifierNamesGenerator,
-                        compact: false,
-                        renameGlobals: true,
-                        identifiersDictionary: ['foo', 'bar', 'baz', 'bark', 'hawk', 'foozmos', 'cow', 'chikago'],
-                        stringArray: true
-                    }
-                ).getObfuscatedCode();
+                obfuscateFunc = (identifierNamesGenerator: TypeFromEnum<typeof IdentifierNamesGenerator>) => {
+                    const obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                        code,
+                        {
+                            identifierNamesGenerator,
+                            compact: false,
+                            renameGlobals: true,
+                            identifiersDictionary: ['foo', 'bar', 'baz', 'bark', 'hawk', 'foozmos', 'cow', 'chikago'],
+                            stringArray: true
+                        }
+                    ).getObfuscatedCode();
+
+                    return obfuscatedCode;
+                };
 
 
                 [
@@ -835,7 +980,6 @@ describe('JavaScriptObfuscator', () => {
                                 stringArrayEncoding: StringArrayEncoding.Rc4
                             }
                         ).getObfuscatedCode();
-
                     });
 
                     it('does not break on run', () => {
@@ -878,7 +1022,7 @@ describe('JavaScriptObfuscator', () => {
                             {
                                 ...NO_ADDITIONAL_NODES_PRESET,
                                 ...baseParams,
-                                stringArrayEncoding: StringArrayEncoding.Rc4
+                                stringArrayEncoding: StringArrayEncoding.Base64
                             }
                         ).getObfuscatedCode();
 
@@ -888,6 +1032,60 @@ describe('JavaScriptObfuscator', () => {
                         assert.doesNotThrow(() => eval(obfuscatedCode));
                     });
                 });
+            });
+        });
+    });
+
+    describe('obfuscateMultiple', () => {
+        describe('multiple source codes', () => {
+            const regExp1: RegExp = /var a0_0x(\w){4,6} *= *0x1;/;
+            const regExp2: RegExp = /var a1_0x(\w){4,6} *= *'abc';/;
+
+            let obfuscatedCode1: string;
+            let obfuscatedCode2: string;
+
+            beforeEach(() => {
+                const sourceCode1: string = readFileAsString(__dirname + '/fixtures/simple-input-1.js');
+                const sourceCode2: string = readFileAsString(__dirname + '/fixtures/simple-input-2.js');
+                const obfuscationResultsObject = JavaScriptObfuscator.obfuscateMultiple(
+                    {
+                        sourceCode1,
+                        sourceCode2
+                    },
+                    {
+                        ...NO_ADDITIONAL_NODES_PRESET,
+                        renameGlobals: true
+                    }
+                );
+
+                obfuscatedCode1 = obfuscationResultsObject.sourceCode1.getObfuscatedCode();
+                obfuscatedCode2 = obfuscationResultsObject.sourceCode2.getObfuscatedCode();
+            });
+
+            it('Match #1: should return correct obfuscated code', () => {
+                assert.match(obfuscatedCode1, regExp1);
+            });
+
+            it('Match #2: should return correct obfuscated code', () => {
+                assert.match(obfuscatedCode2, regExp2);
+            });
+        });
+
+        describe('invalid source codes object', () => {
+            let testFunc: () => TDictionary<IObfuscatedCode>;
+
+            beforeEach(() => {
+                testFunc = () => JavaScriptObfuscator.obfuscateMultiple(
+                    'foo' as any,
+                    {
+                        ...NO_ADDITIONAL_NODES_PRESET,
+                        renameGlobals: true
+                    }
+                );
+            });
+
+            it('Should throw an error if source codes object is not a plain object', () => {
+                assert.throw(testFunc, Error);
             });
         });
     });

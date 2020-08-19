@@ -11,11 +11,12 @@ import { TNodeWithLexicalScope } from '../../types/node/TNodeWithLexicalScope';
 import { IIdentifierObfuscatingReplacer } from '../../interfaces/node-transformers/obfuscating-transformers/obfuscating-replacers/IIdentifierObfuscatingReplacer';
 import { IOptions } from '../../interfaces/options/IOptions';
 import { IRandomGenerator } from '../../interfaces/utils/IRandomGenerator';
-import { IScopeAnalyzer } from '../../interfaces/analyzers/scope-analyzer/IScopeAnalyzer';
+import { IScopeIdentifiersTraverser } from '../../interfaces/node/IScopeIdentifiersTraverser';
+import { IScopeIdentifiersTraverserCallbackData } from '../../interfaces/node/IScopeIdentifiersTraverserCallbackData';
 import { IVisitor } from '../../interfaces/node-transformers/IVisitor';
 
 import { IdentifierObfuscatingReplacer } from '../../enums/node-transformers/obfuscating-transformers/obfuscating-replacers/IdentifierObfuscatingReplacer';
-import { TransformationStage } from '../../enums/node-transformers/TransformationStage';
+import { NodeTransformationStage } from '../../enums/node-transformers/NodeTransformationStage';
 
 import { AbstractNodeTransformer } from '../AbstractNodeTransformer';
 import { NodeGuards } from '../../node/NodeGuards';
@@ -27,19 +28,6 @@ import { NodeMetadata } from '../../node/NodeMetadata';
 @injectable()
 export class ScopeIdentifiersTransformer extends AbstractNodeTransformer {
     /**
-     * @type {string}
-     */
-    private static readonly argumentsVariableName: string = 'arguments';
-
-    /**
-     * @type {string[]}
-     */
-    private static readonly globalScopeNames: string[] = [
-        'global',
-        'module'
-    ];
-
-    /**
      * @type {IIdentifierObfuscatingReplacer}
      */
     private readonly identifierObfuscatingReplacer: IIdentifierObfuscatingReplacer;
@@ -50,43 +38,41 @@ export class ScopeIdentifiersTransformer extends AbstractNodeTransformer {
     private readonly lexicalScopesWithObjectPatternWithoutDeclarationMap: Map<TNodeWithLexicalScope, boolean> = new Map();
 
     /**
-     * @type {IScopeAnalyzer}
+     * @type {IScopeIdentifiersTraverser}
      */
-    private readonly scopeAnalyzer: IScopeAnalyzer;
+    private readonly scopeIdentifiersTraverser: IScopeIdentifiersTraverser;
 
     /**
      * @param {TIdentifierObfuscatingReplacerFactory} identifierObfuscatingReplacerFactory
      * @param {IRandomGenerator} randomGenerator
      * @param {IOptions} options
-     * @param {IScopeAnalyzer} scopeAnalyzer
+     * @param {IScopeIdentifiersTraverser} scopeIdentifiersTraverser
      */
     public constructor (
         @inject(ServiceIdentifiers.Factory__IIdentifierObfuscatingReplacer)
             identifierObfuscatingReplacerFactory: TIdentifierObfuscatingReplacerFactory,
         @inject(ServiceIdentifiers.IRandomGenerator) randomGenerator: IRandomGenerator,
         @inject(ServiceIdentifiers.IOptions) options: IOptions,
-        @inject(ServiceIdentifiers.IScopeAnalyzer) scopeAnalyzer: IScopeAnalyzer
+        @inject(ServiceIdentifiers.IScopeIdentifiersTraverser) scopeIdentifiersTraverser: IScopeIdentifiersTraverser
     ) {
         super(randomGenerator, options);
 
         this.identifierObfuscatingReplacer = identifierObfuscatingReplacerFactory(
             IdentifierObfuscatingReplacer.BaseIdentifierObfuscatingReplacer
         );
-        this.scopeAnalyzer = scopeAnalyzer;
+        this.scopeIdentifiersTraverser = scopeIdentifiersTraverser;
     }
 
     /**
-     * @param {TransformationStage} transformationStage
+     * @param {NodeTransformationStage} nodeTransformationStage
      * @returns {IVisitor | null}
      */
-    public getVisitor (transformationStage: TransformationStage): IVisitor | null {
-        switch (transformationStage) {
-            case TransformationStage.Obfuscating:
+    public getVisitor (nodeTransformationStage: NodeTransformationStage): IVisitor | null {
+        switch (nodeTransformationStage) {
+            case NodeTransformationStage.Obfuscating:
                 return {
                     enter: (node: ESTree.Node, parentNode: ESTree.Node | null): ESTree.Node | undefined => {
                         if (parentNode && NodeGuards.isProgramNode(node)) {
-                            this.analyzeNode(node, parentNode);
-
                             return this.transformNode(node, parentNode);
                         }
                     }
@@ -98,65 +84,43 @@ export class ScopeIdentifiersTransformer extends AbstractNodeTransformer {
     }
 
     /**
-     * @param {Program} programNode
-     * @param {Node | null} parentNode
-     * @returns {Node}
-     */
-    public analyzeNode (programNode: ESTree.Program, parentNode: ESTree.Node | null): void {
-        this.scopeAnalyzer.analyze(programNode);
-    }
-
-    /**
      * @param {VariableDeclaration} programNode
      * @param {NodeGuards} parentNode
      * @returns {NodeGuards}
      */
     public transformNode (programNode: ESTree.Program, parentNode: ESTree.Node): ESTree.Node {
-        const globalScope: eslintScope.Scope = this.scopeAnalyzer.acquireScope(programNode);
+        this.scopeIdentifiersTraverser.traverseScopeIdentifiers(
+            programNode,
+            parentNode,
+            (data: IScopeIdentifiersTraverserCallbackData) => {
+                const {
+                    isGlobalDeclaration,
+                    variable,
+                    variableLexicalScopeNode
+                } = data;
 
-        this.traverseScopeVariables(globalScope);
+                if (!this.options.renameGlobals && isGlobalDeclaration) {
+                    const isImportBindingOrCatchClauseIdentifier: boolean = variable.defs
+                        .every((definition: eslintScope.Definition) =>
+                            definition.type === 'ImportBinding'
+                            || definition.type === 'CatchClause'
+                        );
+
+                    // skip all global identifiers except import statement and catch clause parameter identifiers
+                    if (!isImportBindingOrCatchClauseIdentifier) {
+                        return;
+                    }
+                }
+
+                this.transformScopeVariableIdentifiers(
+                    variable,
+                    variableLexicalScopeNode,
+                    isGlobalDeclaration
+                );
+            }
+        );
 
         return programNode;
-    }
-
-    /**
-     * @param {Scope} scope
-     */
-    private traverseScopeVariables (scope: eslintScope.Scope): void {
-        const lexicalScope: eslintScope.Scope = scope.variableScope;
-        const nodeWithLexicalScope: TNodeWithLexicalScope | null = NodeGuards.isNodeWithBlockLexicalScope(lexicalScope.block)
-            ? lexicalScope.block
-            : null;
-        const isGlobalDeclaration: boolean = ScopeIdentifiersTransformer.globalScopeNames.includes(lexicalScope.type);
-
-        if (!nodeWithLexicalScope) {
-            return;
-        }
-
-        for (const variable of scope.variables) {
-            if (variable.name === ScopeIdentifiersTransformer.argumentsVariableName) {
-                continue;
-            }
-
-            if (!this.options.renameGlobals && isGlobalDeclaration) {
-                const isImportBindingOrCatchClauseIdentifier: boolean = variable.defs
-                    .every((definition: eslintScope.Definition) =>
-                        definition.type === 'ImportBinding'
-                        || definition.type === 'CatchClause'
-                    );
-
-                // skip all global identifiers except import statement and catch clause parameter identifiers
-                if (!isImportBindingOrCatchClauseIdentifier) {
-                    continue;
-                }
-            }
-
-            this.transformScopeVariableIdentifiers(variable, nodeWithLexicalScope, isGlobalDeclaration);
-        }
-
-        for (const childScope of scope.childScopes) {
-            this.traverseScopeVariables(childScope);
-        }
     }
 
     /**
@@ -169,14 +133,18 @@ export class ScopeIdentifiersTransformer extends AbstractNodeTransformer {
         lexicalScopeNode: TNodeWithLexicalScope,
         isGlobalDeclaration: boolean
     ): void {
-        for (const identifier of variable.identifiers) {
-            if (!this.isReplaceableIdentifierNode(identifier, lexicalScopeNode, variable)) {
-                continue;
-            }
+        const firstIdentifier: ESTree.Identifier | null = variable.identifiers[0] ?? null;
 
-            this.storeIdentifierName(identifier, lexicalScopeNode, isGlobalDeclaration);
-            this.replaceIdentifierName(identifier, lexicalScopeNode, variable);
+        if (!firstIdentifier) {
+            return;
         }
+
+        if (!this.isReplaceableIdentifierNode(firstIdentifier, lexicalScopeNode, variable)) {
+            return;
+        }
+
+        this.storeIdentifierName(firstIdentifier, lexicalScopeNode, isGlobalDeclaration);
+        this.replaceIdentifierName(firstIdentifier, lexicalScopeNode, variable);
     }
 
     /**
@@ -209,7 +177,10 @@ export class ScopeIdentifiersTransformer extends AbstractNodeTransformer {
         const newIdentifier: ESTree.Identifier = this.identifierObfuscatingReplacer
             .replace(identifierNode, lexicalScopeNode);
 
-        identifierNode.name = newIdentifier.name;
+        // rename of identifiers
+        variable.identifiers.forEach((identifier: ESTree.Identifier) => {
+            identifier.name = newIdentifier.name;
+        });
 
         // rename of references
         variable.references.forEach((reference: eslintScope.Reference) => {
@@ -223,6 +194,7 @@ export class ScopeIdentifiersTransformer extends AbstractNodeTransformer {
      * @param {Variable} variable
      * @returns {boolean}
      */
+    // eslint-disable-next-line complexity
     private isReplaceableIdentifierNode (
         identifierNode: ESTree.Identifier,
         lexicalScopeNode: TNodeWithLexicalScope,
@@ -232,7 +204,8 @@ export class ScopeIdentifiersTransformer extends AbstractNodeTransformer {
 
         return !!parentNode
             && !NodeMetadata.isIgnoredNode(identifierNode)
-            && !this.isProhibitedPropertyNode(identifierNode, parentNode)
+            && !this.isProhibitedPropertyIdentifierNode(identifierNode, parentNode)
+            && !this.isProhibitedPropertyAssignmentPatternIdentifierNode(identifierNode, parentNode)
             && !this.isProhibitedClassDeclarationNameIdentifierNode(variable, identifierNode, parentNode)
             && !this.isProhibitedExportNamedClassDeclarationIdentifierNode(identifierNode, parentNode)
             && !this.isProhibitedExportNamedFunctionDeclarationIdentifierNode(identifierNode, parentNode)
@@ -320,18 +293,33 @@ export class ScopeIdentifiersTransformer extends AbstractNodeTransformer {
      * @param {Node} parentNode
      * @returns {boolean}
      */
-    private isProhibitedPropertyNode (node: ESTree.Node, parentNode: ESTree.Node): node is ESTree.Identifier {
-        const isProhibitedPropertyIdentifier = NodeGuards.isPropertyNode(parentNode)
+    private isProhibitedPropertyIdentifierNode (
+        node: ESTree.Node,
+        parentNode: ESTree.Node
+    ): node is ESTree.Identifier {
+        return NodeGuards.isPropertyNode(parentNode)
             && !parentNode.computed
-            && parentNode.key === node;
-        const isProhibitedPropertyAssignmentPatternIdentifier = NodeGuards.isAssignmentPatternNode(parentNode)
+            && NodeGuards.isIdentifierNode(parentNode.key)
+            && NodeGuards.isIdentifierNode(node)
+            && parentNode.key.name === node.name;
+    }
+
+    /**
+     * @param {Node} node
+     * @param {Node} parentNode
+     * @returns {boolean}
+     */
+    private isProhibitedPropertyAssignmentPatternIdentifierNode (
+        node: ESTree.Node,
+        parentNode: ESTree.Node
+    ): node is ESTree.Identifier {
+        return NodeGuards.isAssignmentPatternNode(parentNode)
             && parentNode.left === node
             && !!parentNode.parentNode
             && NodeGuards.isPropertyNode(parentNode.parentNode)
-            && parentNode.left === parentNode.parentNode.key;
-
-        return isProhibitedPropertyIdentifier
-            || isProhibitedPropertyAssignmentPatternIdentifier;
+            && NodeGuards.isIdentifierNode(parentNode.left)
+            && NodeGuards.isIdentifierNode(parentNode.parentNode.key)
+            && parentNode.left.name === parentNode.parentNode.key.name;
     }
 
     /**
@@ -375,9 +363,13 @@ export class ScopeIdentifiersTransformer extends AbstractNodeTransformer {
                 ) {
                     isLexicalScopeHasObjectPatternWithoutDeclaration = true;
 
-                    const properties: ESTree.Property[] = node.properties;
+                    const properties: (ESTree.Property | ESTree.RestElement)[] = node.properties;
 
                     for (const property of properties) {
+                        if (!NodeGuards.isPropertyNode(property)) {
+                            continue;
+                        }
+
                         if (property.computed || !property.shorthand) {
                             continue;
                         }

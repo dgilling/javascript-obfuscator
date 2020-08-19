@@ -4,11 +4,18 @@ import { ServiceIdentifiers } from '../container/ServiceIdentifiers';
 import { ICryptUtils } from '../interfaces/utils/ICryptUtils';
 import { IRandomGenerator } from '../interfaces/utils/IRandomGenerator';
 
+import { base64alphabet } from '../constants/Base64Alphabet';
+
 import { RandomGenerator } from './RandomGenerator';
 import { Utils } from './Utils';
 
 @injectable()
 export class CryptUtils implements ICryptUtils {
+    /**
+     * @type {string}
+     */
+    protected readonly base64Alphabet: string = base64alphabet;
+
     /**
      * @type {IRandomGenerator}
      */
@@ -28,7 +35,7 @@ export class CryptUtils implements ICryptUtils {
      * @returns {string}
      */
     public btoa (string: string): string {
-        const chars: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+        const chars: string = this.base64Alphabet;
 
         let output: string = '';
 

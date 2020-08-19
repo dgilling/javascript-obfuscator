@@ -13,6 +13,7 @@ describe('CLIUtils', () => {
                 const configFilePath: string = `../../../${configDirName}/${configFileName}`;
                 const expectedResult: TInputOptions = {
                     compact: true,
+                    exclude: ['**/foo.js'],
                     selfDefending: false,
                     sourceMap: true
                 };
@@ -50,7 +51,23 @@ describe('CLIUtils', () => {
             });
         });
 
-        describe('Variant #2: invalid config file path', () => {
+        describe('Variant #2: invalid config file extension', () => {
+            const configDirName: string = 'test/fixtures';
+            const configFileName: string = 'configs.config';
+            const configFilePath: string = `../../../${configDirName}/${configFileName}`;
+
+            let testFunc: () => void;
+
+            before(() => {
+                testFunc = () => CLIUtils.getUserConfig(configFilePath);
+            });
+
+            it('should throw an error if `configFilePath` is not a valid path', () => {
+                assert.throws(testFunc, /Given config path must be a valid/);
+            });
+        });
+
+        describe('Variant #3: invalid config file path', () => {
             const configDirName: string = 'test/fixtures';
             const configFileName: string = 'configs.js';
             const configFilePath: string = `../../../${configDirName}/${configFileName}`;
@@ -62,7 +79,7 @@ describe('CLIUtils', () => {
             });
 
             it('should throw an error if `configFilePath` is not a valid path', () => {
-                assert.throws(testFunc, ReferenceError);
+                assert.throws(testFunc, /Cannot open config file/);
             });
         });
     });

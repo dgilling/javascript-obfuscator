@@ -7,6 +7,7 @@ import { NO_ADDITIONAL_NODES_PRESET } from '../../../../../src/options/presets/N
 
 import { readFileAsString } from '../../../../helpers/readFileAsString';
 import { getRegExpMatch } from '../../../../helpers/getRegExpMatch';
+import { swapLettersCase } from '../../../../helpers/swapLettersCase';
 
 import { JavaScriptObfuscator } from '../../../../../src/JavaScriptObfuscatorFacade';
 
@@ -186,7 +187,7 @@ describe('LiteralTransformer', () => {
         });
 
         describe('Variant #8: base64 encoding', () => {
-            const stringArrayRegExp: RegExp = /^var _0x([a-f0-9]){4} *= *\['dGVzdA=='\];/;
+            const stringArrayRegExp: RegExp = new RegExp(`^var _0x([a-f0-9]){4} *= *\\['${swapLettersCase('dGVzdA==')}'];`);
             const stringArrayCallRegExp: RegExp = /var test *= *_0x([a-f0-9]){4}\('0x0'\);/;
 
             let obfuscatedCode: string;
@@ -576,6 +577,75 @@ describe('LiteralTransformer', () => {
                 });
             });
         });
+
+        describe('Variant #14: import declaration source literal', () => {
+            const importDeclarationRegExp: RegExp = /import *{ *bar *} *from *'foo';/;
+
+            let obfuscatedCode: string;
+
+            before(() => {
+                const code: string = readFileAsString(__dirname + '/fixtures/import-declaration-source.js');
+
+                obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                    code,
+                    {
+                        ...NO_ADDITIONAL_NODES_PRESET,
+                        stringArray: true,
+                        stringArrayThreshold: 1
+                    }
+                ).getObfuscatedCode();
+            });
+
+            it('Should not add `ImportDeclaration` source literal to the string array', () => {
+                assert.match(obfuscatedCode, importDeclarationRegExp);
+            });
+        });
+
+        describe('Variant #15: export all declaration source literal', () => {
+            const exportAllDeclarationRegExp: RegExp = /export *\* *from *'foo';/;
+
+            let obfuscatedCode: string;
+
+            before(() => {
+                const code: string = readFileAsString(__dirname + '/fixtures/export-all-declaration-source.js');
+
+                obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                    code,
+                    {
+                        ...NO_ADDITIONAL_NODES_PRESET,
+                        stringArray: true,
+                        stringArrayThreshold: 1
+                    }
+                ).getObfuscatedCode();
+            });
+
+            it('Should not add `ExportAllDeclaration` source literal to the string array', () => {
+                assert.match(obfuscatedCode, exportAllDeclarationRegExp);
+            });
+        });
+
+        describe('Variant #16: export named declaration source literal', () => {
+            const exportNamedDeclarationRegExp: RegExp = /export *{ *bar *} *from *'foo';/;
+
+            let obfuscatedCode: string;
+
+            before(() => {
+                const code: string = readFileAsString(__dirname + '/fixtures/export-named-declaration-source.js');
+
+                obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                    code,
+                    {
+                        ...NO_ADDITIONAL_NODES_PRESET,
+                        stringArray: true,
+                        stringArrayThreshold: 1
+                    }
+                ).getObfuscatedCode();
+            });
+
+            it('Should not add `ExportNamedDeclaration` source literal to the string array', () => {
+                assert.match(obfuscatedCode, exportNamedDeclarationRegExp);
+            });
+        });
     });
 
     describe('transformation of literal node with boolean value', () => {
@@ -608,6 +678,29 @@ describe('LiteralTransformer', () => {
 
         before(() => {
             const code: string = readFileAsString(__dirname + '/fixtures/number-value.js');
+
+            obfuscatedCode = JavaScriptObfuscator.obfuscate(
+                code,
+                {
+                    ...NO_ADDITIONAL_NODES_PRESET,
+                    stringArray: true,
+                    stringArrayThreshold: 1
+                }
+            ).getObfuscatedCode();
+        });
+
+        it('should transform literal node', () => {
+            assert.match(obfuscatedCode, regExp);
+        });
+    });
+
+    describe('transformation of literal node with bigint value', () => {
+        const regExp: RegExp = /^var test *= *0xan;$/;
+
+        let obfuscatedCode: string;
+
+        before(() => {
+            const code: string = readFileAsString(__dirname + '/fixtures/bigint-value.js');
 
             obfuscatedCode = JavaScriptObfuscator.obfuscate(
                 code,

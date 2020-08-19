@@ -60,6 +60,14 @@ export class NodeGuards {
      * @param {Node} node
      * @returns {boolean}
      */
+    public static isBigIntLiteralNode (node: ESTree.Node): node is ESTree.BigIntLiteral {
+        return NodeGuards.isLiteralNode(node) && !!(<ESTree.BigIntLiteral>node).bigint;
+    }
+
+    /**
+     * @param {Node} node
+     * @returns {boolean}
+     */
     public static isBlockStatementNode (node: ESTree.Node): node is ESTree.BlockStatement {
         return node.type === NodeType.BlockStatement;
     }
@@ -105,6 +113,14 @@ export class NodeGuards {
     public static isDirectiveNode (node: ESTree.Node): node is ESTree.Directive {
         return node.type === NodeType.ExpressionStatement
             && 'directive' in node;
+    }
+
+    /**
+     * @param {Node} node
+     * @returns {boolean}
+     */
+    public static isExportAllDeclarationNode (node: ESTree.Node): node is ESTree.ExportAllDeclaration {
+        return node.type === NodeType.ExportAllDeclaration;
     }
 
     /**
@@ -158,6 +174,14 @@ export class NodeGuards {
      */
     public static isIdentifierNode (node: ESTree.Node): node is ESTree.Identifier {
         return node.type === NodeType.Identifier;
+    }
+
+    /**
+     * @param {Node} node
+     * @returns {boolean}
+     */
+    public static isIfStatementNode (node: ESTree.Node): node is ESTree.IfStatement {
+        return node.type === NodeType.IfStatement;
     }
 
     /**
@@ -311,40 +335,6 @@ export class NodeGuards {
 
     /**
      * @param {Node} node
-     * @param {Node} parentNode
-     * @returns {boolean}
-     */
-    public static parentNodeIsPropertyNode (node: ESTree.Node, parentNode: ESTree.Node): node is ESTree.Identifier {
-        return NodeGuards.isPropertyNode(parentNode)
-            && !parentNode.computed
-            && parentNode.key === node;
-    }
-
-    /**
-     * @param {Node} node
-     * @param {Node} parentNode
-     * @returns {boolean}
-     */
-    public static parentNodeIsMemberExpressionNode (node: ESTree.Node, parentNode: ESTree.Node): node is ESTree.Identifier {
-        return (
-            NodeGuards.isMemberExpressionNode(parentNode)
-            && !parentNode.computed
-            && parentNode.property === node
-        );
-    }
-
-    /**
-     * @param {Node} node
-     * @param {Node} parentNode
-     * @returns {boolean}
-     */
-    public static parentNodeIsMethodDefinitionNode (node: ESTree.Node, parentNode: ESTree.Node): node is ESTree.Identifier {
-        return NodeGuards.isMethodDefinitionNode(parentNode)
-            && !parentNode.computed;
-    }
-
-    /**
-     * @param {Node} node
      * @returns {boolean}
      */
     public static isRestElementNode (node: ESTree.Node): node is ESTree.RestElement {
@@ -357,6 +347,14 @@ export class NodeGuards {
      */
     public static isReturnStatementNode (node: ESTree.Node): node is ESTree.ReturnStatement {
         return node.type === NodeType.ReturnStatement;
+    }
+
+    /**
+     * @param {Node} node
+     * @returns {boolean}
+     */
+    public static isSequenceExpressionNode (node: ESTree.Node): node is ESTree.SequenceExpression {
+        return node.type === NodeType.SequenceExpression;
     }
 
     /**
@@ -430,5 +428,13 @@ export class NodeGuards {
      */
     public static isWhileStatementNode (node: ESTree.Node): node is ESTree.WhileStatement {
         return node.type === NodeType.WhileStatement;
+    }
+
+    /**
+     * @param {Node} node
+     * @returns {boolean}
+     */
+    public static isYieldExpressionNode (node: ESTree.Node): node is ESTree.YieldExpression {
+        return node.type === NodeType.YieldExpression;
     }
 }

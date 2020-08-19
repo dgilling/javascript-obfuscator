@@ -3,9 +3,11 @@ import { assert } from 'chai';
 import { NO_ADDITIONAL_NODES_PRESET } from '../../../../../../src/options/presets/NoCustomNodes';
 
 import { readFileAsString } from '../../../../../helpers/readFileAsString';
+import { getRegExpMatch } from '../../../../../helpers/getRegExpMatch';
+import { stubNodeTransformers } from '../../../../../helpers/stubNodeTransformers';
 
 import { JavaScriptObfuscator } from '../../../../../../src/JavaScriptObfuscatorFacade';
-import { getRegExpMatch } from '../../../../../helpers/getRegExpMatch';
+import { ObjectPatternPropertiesTransformer } from '../../../../../../src/node-transformers/converting-transformers/ObjectPatternPropertiesTransformer';
 
 describe('ScopeIdentifiersTransformer Function identifiers', () => {
     describe('identifiers transformation inside `FunctionDeclaration` and `FunctionExpression` node body', () => {
@@ -46,12 +48,12 @@ describe('ScopeIdentifiersTransformer Function identifiers', () => {
             returnStatementIdentifierName = (<RegExpMatchArray>returnStatementIdentifierMatch)[1];
         });
 
-        it('should generate different names for function parameter identifier and function body identifier with same name', () => {
-            assert.notEqual(functionParamIdentifierName, functionBodyIdentifierName);
+        it('should generate same names for function parameter identifier and function body identifier with same name', () => {
+            assert.equal(functionParamIdentifierName, functionBodyIdentifierName);
         });
 
-        it('should generate different names for function parameter identifier and variable declaration identifier with same name', () => {
-            assert.notEqual(functionParamIdentifierName, variableDeclarationIdentifierName);
+        it('should generate same names for function parameter identifier and variable declaration identifier with same name', () => {
+            assert.equal(functionParamIdentifierName, variableDeclarationIdentifierName);
         });
 
         it('should correctly transform both variable declaration identifier and return statement identifier with same name', () => {
@@ -112,12 +114,12 @@ describe('ScopeIdentifiersTransformer Function identifiers', () => {
                 assert.equal(innerFunctionNameIdentifierName, functionObjectIdentifierName);
             });
 
-            it('shouldn\'t generate same names for function parameter identifiers', () => {
-                assert.notEqual(functionExpressionParamIdentifierName, innerFunctionNameIdentifierName);
+            it('should generate same names for function parameter identifiers', () => {
+                assert.equal(functionExpressionParamIdentifierName, innerFunctionNameIdentifierName);
             });
 
-            it('shouldn\'t generate same names for function expression parameter and function object identifiers', () => {
-                assert.notEqual(functionExpressionParamIdentifierName, functionObjectIdentifierName);
+            it('should generate same names for function expression parameter and function object identifiers', () => {
+                assert.equal(functionExpressionParamIdentifierName, functionObjectIdentifierName);
             });
         });
 
@@ -273,6 +275,8 @@ describe('ScopeIdentifiersTransformer Function identifiers', () => {
     });
 
     describe('object pattern as parameter', () => {
+        stubNodeTransformers([ObjectPatternPropertiesTransformer]);
+
         describe('Variant #1: simple', () => {
             const functionParameterRegExp: RegExp = /function *\(\{ *bar *\}\) *\{/;
             const functionBodyRegExp: RegExp = /return *bar;/;
@@ -711,6 +715,8 @@ describe('ScopeIdentifiersTransformer Function identifiers', () => {
     });
 
     describe('object rest parameter', () => {
+        stubNodeTransformers([ObjectPatternPropertiesTransformer]);
+
         const functionRegExp: RegExp = /function *func *\(\{foo, *..._0x[a-f0-9]{4,6}\}\) *\{/;
         const returnRegExp: RegExp = /return *foo *\+ *_0x[a-f0-9]{4,6};/;
 

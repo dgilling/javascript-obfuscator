@@ -2,34 +2,43 @@ import { Container, interfaces } from 'inversify';
 import { ServiceIdentifiers } from './ServiceIdentifiers';
 
 import { analyzersModule } from './modules/analyzers/AnalyzersModule';
+import { codeTransformersModule } from './modules/code-transformers/CodeTransformersModule';
 import { controlFlowTransformersModule } from './modules/node-transformers/ControlFlowTransformersModule';
 import { convertingTransformersModule } from './modules/node-transformers/ConvertingTransformersModule';
+import { customCodeHelpersModule } from './modules/custom-code-helpers/CustomCodeHelpersModule';
 import { customNodesModule } from './modules/custom-nodes/CustomNodesModule';
+import { deadCodeInjectionTransformersModule } from './modules/node-transformers/DeadCodeInjectionTransformersModule';
 import { finalizingTransformersModule } from './modules/node-transformers/FinalizingTransformersModule';
 import { generatorsModule } from './modules/generators/GeneratorsModule';
+import { initializingTransformersModule } from './modules/node-transformers/InitializingTransformersModule';
+import { nodeModule } from './modules/node/NodeModule';
 import { nodeTransformersModule } from './modules/node-transformers/NodeTransformersModule';
 import { obfuscatingTransformersModule } from './modules/node-transformers/ObfuscatingTransformersModule';
 import { optionsModule } from './modules/options/OptionsModule';
 import { preparingTransformersModule } from './modules/node-transformers/PreparingTransformersModule';
+import { renamePropertiesTransformersModule } from './modules/node-transformers/RenamePropertiesTransformersModule';
+import { simplifyingTransformersModule } from './modules/node-transformers/SimplifyingTransformersModule';
 import { storagesModule } from './modules/storages/StoragesModule';
 import { utilsModule } from './modules/utils/UtilsModule';
 
 import { TInputOptions } from '../types/options/TInputOptions';
 
+import { ICodeTransformersRunner } from '../interfaces/code-transformers/ICodeTransformersRunner';
 import { IInversifyContainerFacade } from '../interfaces/container/IInversifyContainerFacade';
 import { IJavaScriptObfuscator } from '../interfaces/IJavaScriptObfsucator';
 import { ILogger } from '../interfaces/logger/ILogger';
 import { IObfuscationEventEmitter } from '../interfaces/event-emitters/IObfuscationEventEmitter';
 import { IObfuscatedCode } from '../interfaces/source-code/IObfuscatedCode';
 import { ISourceCode } from '../interfaces/source-code/ISourceCode';
-import { ITransformersRunner } from '../interfaces/node-transformers/ITransformersRunner';
+import { INodeTransformersRunner } from '../interfaces/node-transformers/INodeTransformersRunner';
 
+import { CodeTransformersRunner } from '../code-transformers/CodeTransformersRunner';
 import { JavaScriptObfuscator } from '../JavaScriptObfuscator';
 import { Logger } from '../logger/Logger';
+import { NodeTransformersRunner } from '../node-transformers/NodeTransformersRunner';
 import { ObfuscationEventEmitter } from '../event-emitters/ObfuscationEventEmitter';
 import { ObfuscatedCode } from '../source-code/ObfuscatedCode';
 import { SourceCode } from '../source-code/SourceCode';
-import { TransformersRunner } from '../node-transformers/TransformersRunner';
 
 export class InversifyContainerFacade implements IInversifyContainerFacade {
     /**
@@ -163,8 +172,13 @@ export class InversifyContainerFacade implements IInversifyContainerFacade {
             .inSingletonScope();
 
         this.container
-            .bind<ITransformersRunner>(ServiceIdentifiers.ITransformersRunner)
-            .to(TransformersRunner)
+            .bind<ICodeTransformersRunner>(ServiceIdentifiers.ICodeTransformersRunner)
+            .to(CodeTransformersRunner)
+            .inSingletonScope();
+
+        this.container
+            .bind<INodeTransformersRunner>(ServiceIdentifiers.INodeTransformersRunner)
+            .to(NodeTransformersRunner)
             .inSingletonScope();
 
         this.container
@@ -191,15 +205,22 @@ export class InversifyContainerFacade implements IInversifyContainerFacade {
 
         // modules
         this.container.load(analyzersModule);
+        this.container.load(codeTransformersModule);
         this.container.load(controlFlowTransformersModule);
         this.container.load(convertingTransformersModule);
+        this.container.load(customCodeHelpersModule);
         this.container.load(customNodesModule);
+        this.container.load(deadCodeInjectionTransformersModule);
         this.container.load(finalizingTransformersModule);
         this.container.load(generatorsModule);
+        this.container.load(initializingTransformersModule);
+        this.container.load(nodeModule);
         this.container.load(nodeTransformersModule);
         this.container.load(obfuscatingTransformersModule);
         this.container.load(optionsModule);
         this.container.load(preparingTransformersModule);
+        this.container.load(renamePropertiesTransformersModule);
+        this.container.load(simplifyingTransformersModule);
         this.container.load(storagesModule);
         this.container.load(utilsModule);
     }
